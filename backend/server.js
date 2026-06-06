@@ -21,6 +21,7 @@ app.use(cors({
   origin: [
     process.env.FRONTEND_URL,
     "https://safeher-flax.vercel.app",
+    "https://safeher-r6kswa8bs-jkhushi16.vercel.app",
     "http://localhost:5173",
     "http://localhost:5174",
   ],
