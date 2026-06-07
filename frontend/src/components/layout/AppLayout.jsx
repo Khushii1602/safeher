@@ -1,25 +1,12 @@
-// AppLayout.jsx
-// A wrapper that adds the Sidebar to every protected page
-// Instead of adding Sidebar to each page individually,
-// we wrap all protected pages with this layout once
-
 import Sidebar from "./Sidebar"
 
-function AppLayout({ children }) {
+export default function AppLayout({ children }) {
   return (
-    <div className="flex min-h-screen"
-      style={{ background: "linear-gradient(135deg, #fdf2f8 0%, #faf5ff 100%)" }}>
-
-      {/* Sidebar — always visible on the left */}
+    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
       <Sidebar />
-
-      {/* Page content — fills remaining space */}
-     <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
+      <main style={{ flex: 1, overflowY: "auto" }}>
         {children}
       </main>
-
     </div>
   )
 }
-
-export default AppLayout

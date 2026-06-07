@@ -3,181 +3,206 @@ import Navbar from "@/components/layout/Navbar"
 import {
   Shield, AlertTriangle, Building2, Users, Timer,
   MapPin, Lock, MessageSquare, Bot, ArrowRight,
-  CheckCircle, Phone, Heart, Star
+  CheckCircle, Star, Phone
 } from "lucide-react"
 
 const features = [
-  {
-    icon: AlertTriangle,
-    title: "SOS Emergency",
-    desc: "One tap sends your live location to emergency contacts and alerts nearby help instantly.",
-    color: "#fef2f2", iconColor: "#dc2626",
-  },
-  {
-    icon: Building2,
-    title: "NGO Directory",
-    desc: "Find verified NGOs near you offering legal aid, shelter, counselling and more.",
-    color: "#f5f3ff", iconColor: "#7c3aed",
-  },
-  {
-    icon: Users,
-    title: "Trusted Mentors",
-    desc: "Connect with verified seniors and mentors who can guide and support you.",
-    color: "#eff6ff", iconColor: "#2563eb",
-  },
-  {
-    icon: Timer,
-    title: "Safety Check-in",
-    desc: "Set a timer. If you miss a check-in, your emergency contacts are alerted automatically.",
-    color: "#f0fdf4", iconColor: "#059669",
-  },
-  {
-    icon: MapPin,
-    title: "Nearby Help",
-    desc: "Instantly find police stations, hospitals, and NGOs closest to your location.",
-    color: "#fff7ed", iconColor: "#d97706",
-  },
-  {
-    icon: Lock,
-    title: "Evidence Vault",
-    desc: "Securely store photos, audio, and documents as evidence — private and encrypted.",
-    color: "#fdf4ff", iconColor: "#9333ea",
-  },
-  {
-    icon: MessageSquare,
-    title: "Community",
-    desc: "Share anonymously, find support, and read stories from survivors and allies.",
-    color: "#fce7f3", iconColor: "#db2777",
-  },
-  {
-    icon: Bot,
-    title: "AI Safety Assistant",
-    desc: "Chat with an AI trained to give safety advice, legal info, and emotional support.",
-    color: "#f5f3ff", iconColor: "#7c3aed",
-  },
-]
-
-const stats = [
-  { number: "50,000+", label: "Women Supported", icon: Heart },
-  { number: "1,200+",  label: "Verified NGOs",   icon: Building2 },
-  { number: "800+",    label: "Trusted Mentors",  icon: Users },
-  { number: "24/7",    label: "Always Available", icon: Shield },
-]
-
-const steps = [
-  { step: "01", title: "Create Your Account", desc: "Sign up in seconds with your email or Google account. No personal details required beyond the basics." },
-  { step: "02", title: "Set Up Your Safety Net", desc: "Add emergency contacts, set your preferences, and explore resources available in your area." },
-  { step: "03", title: "Access Help Anytime", desc: "Use the SOS button, find nearby NGOs, chat with Sakhi our AI assistant, or connect with a mentor." },
+  { icon: AlertTriangle, title: "SOS Emergency",    desc: "One tap sends your live location to trusted contacts and alerts nearby help.", color: "#fff5f5", ic: "#dc2626" },
+  { icon: Building2,     title: "NGO Directory",    desc: "Browse 1,200+ verified NGOs offering legal aid, shelter, and counselling.", color: "#f5f3ff", ic: "#6d28d9" },
+  { icon: Users,         title: "Trusted Mentors",  desc: "Connect with verified mentors for legal, career, and emotional guidance.", color: "#eff6ff", ic: "#2563eb" },
+  { icon: Timer,         title: "Safety Check-in",  desc: "Set a timer. If you miss it, your contacts are automatically alerted.", color: "#f0fdf4", ic: "#059669" },
+  { icon: MapPin,        title: "Nearby Help",      desc: "Find police stations, hospitals, and NGOs closest to your location.", color: "#fffbeb", ic: "#d97706" },
+  { icon: Lock,          title: "Evidence Vault",   desc: "Securely store photos, audio, and documents — only you can access them.", color: "#fdf4ff", ic: "#9333ea" },
+  { icon: MessageSquare, title: "Community",        desc: "Share anonymously, find support, and connect with survivors and allies.", color: "#fff0f6", ic: "#db2777" },
+  { icon: Bot,           title: "AI Assistant",     desc: "Sakhi gives safety advice, legal information, and emotional support 24/7.", color: "#f5f3ff", ic: "#6d28d9" },
 ]
 
 const testimonials = [
-  { quote: "SafeHer connected me with a shelter within minutes. The NGO directory is incredibly detailed and trustworthy.", name: "Priya S.", location: "Delhi, India" },
-  { quote: "The SOS feature alerted my contacts before I could even make a call. This app genuinely saved me.", name: "Ananya R.", location: "Mumbai, India" },
-  { quote: "I found my mentor through SafeHer. She helped me navigate a legal situation I had no idea how to handle.", name: "Meera K.", location: "Bangalore, India" },
+  { quote: "SafeHer connected me with a shelter within minutes. The NGO directory is incredibly detailed.", name: "Priya S.", city: "Delhi" },
+  { quote: "The SOS feature alerted my contacts before I could make a call. It genuinely saved me.", name: "Ananya R.", city: "Mumbai" },
+  { quote: "My mentor helped me navigate a legal situation I had no idea how to handle. Truly life-changing.", name: "Meera K.", city: "Bangalore" },
+]
+
+const steps = [
+  { n: "01", title: "Create Your Account",    desc: "Sign up in seconds. No complicated forms, just your email or Google." },
+  { n: "02", title: "Set Up Your Safety Net", desc: "Add emergency contacts, explore NGOs, and set your preferences." },
+  { n: "03", title: "Access Help Instantly",  desc: "Use SOS, find nearby help, or chat with Sakhi — anytime, anywhere." },
 ]
 
 export default function Home() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--background)" }}>
+    <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
       <Navbar />
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-20 pb-24">
-        <div className="max-w-3xl mx-auto text-center">
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "96px 48px 80px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
 
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-8 border"
-            style={{ background: "var(--primary-light)", color: "var(--primary)", borderColor: "#ddd6fe" }}>
-            <Shield size={12} />
-            Built for women, by women
+          {/* Left */}
+          <div className="anim-fade-up">
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: "var(--purple-light)", color: "var(--purple)",
+              padding: "6px 14px", borderRadius: 100,
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+              textTransform: "uppercase", marginBottom: 28
+            }}>
+              <Shield size={11} /> Women's Safety Platform
+            </div>
+
+            <h1 className="t-display" style={{ marginBottom: 20 }}>
+              Safety is a{" "}
+              <span style={{ color: "var(--purple)", fontStyle: "italic" }}>right</span>,
+              <br />not a privilege
+            </h1>
+
+            <p className="t-body" style={{ fontSize: 17, maxWidth: 440, marginBottom: 36, lineHeight: 1.7 }}>
+              Connect with verified NGOs, trusted mentors, emergency support
+              and a caring community — everything you need, beautifully designed.
+            </p>
+
+            <div style={{ display: "flex", gap: 12, marginBottom: 40 }}>
+              <button className="btn btn-purple btn-lg" onClick={() => navigate("/login")}>
+                Get Started Free <ArrowRight size={16} />
+              </button>
+              <button className="btn btn-outline btn-lg" onClick={() => navigate("/login")}>
+                See Features
+              </button>
+            </div>
+
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+              {["Free forever", "No data sold", "Always private"].map(t => (
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-3)" }}>
+                  <CheckCircle size={13} color="var(--green)" />
+                  {t}
+                </div>
+              ))}
+            </div>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
-            You deserve to feel{" "}
-            <span style={{ color: "var(--primary)" }}>safe</span>{" "}
-            everywhere
-          </h1>
+          {/* Right — visual */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-            SafeHer connects women with emergency support, verified NGOs, trusted mentors,
-            legal aid, and a caring community — all in one place.
-          </p>
+            {/* SOS card */}
+            <div style={{
+              background: "var(--black)", borderRadius: 20,
+              padding: "20px 24px",
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: "#dc2626",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <AlertTriangle size={22} color="white" />
+                </div>
+                <div>
+                  <p style={{ color: "white", fontSize: 15, fontWeight: 700 }}>SOS Emergency</p>
+                  <p style={{ color: "#9b9b9b", fontSize: 12, marginTop: 2 }}>Location shared with 3 contacts</p>
+                </div>
+              </div>
+              <div style={{
+                background: "#dc2626", color: "white",
+                padding: "6px 14px", borderRadius: 8,
+                fontSize: 12, fontWeight: 800, letterSpacing: "0.05em"
+              }}>
+                ACTIVE
+              </div>
+            </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <button
-              onClick={() => navigate("/login")}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl text-white text-sm font-semibold transition-all hover:opacity-90 hover:scale-105 active:scale-95"
-              style={{ background: "var(--primary)", boxShadow: "0 4px 14px rgba(124,58,237,0.35)" }}>
-              Get Started Free
-              <ArrowRight size={16} />
-            </button>
-            <button
-              onClick={() => navigate("/login")}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-gray-700 border border-gray-200 hover:bg-white hover:border-gray-300 transition-all">
-              Learn More
-            </button>
+            {/* Stats grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {[
+                { n: "50,000+", l: "Women Supported" },
+                { n: "1,200+",  l: "Verified NGOs" },
+                { n: "800+",    l: "Trusted Mentors" },
+                { n: "24/7",    l: "AI Support" },
+              ].map(s => (
+                <div key={s.l} className="card" style={{ padding: "20px 22px" }}>
+                  <p style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-1px", color: "var(--text-1)", marginBottom: 2 }}>
+                    {s.n}
+                  </p>
+                  <p style={{ fontSize: 12, color: "var(--text-3)" }}>{s.l}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Mentor card */}
+            <div className="card" style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: "50%",
+                background: "var(--purple)", color: "white",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 14, fontWeight: 700, flexShrink: 0
+              }}>PS</div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>Priya Sharma</p>
+                <p style={{ fontSize: 11, color: "var(--text-3)" }}>Senior Advocate · Legal Aid</p>
+              </div>
+              <div style={{
+                background: "var(--green-light)", color: "var(--green)",
+                padding: "4px 10px", borderRadius: 100,
+                fontSize: 11, fontWeight: 600
+              }}>Available</div>
+            </div>
           </div>
+        </div>
+      </section>
 
-          {/* Trust indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-400">
-            {["Free to use", "No data sold", "Always private", "Verified NGOs"].map((item) => (
-              <div key={item} className="flex items-center gap-1.5">
-                <CheckCircle size={12} style={{ color: "var(--success)" }} />
-                {item}
+      {/* Divider with stats */}
+      <div style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--white)" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 48px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 48 }}>
+            {[
+              { n: "50,000+", l: "Women helped across India" },
+              { n: "1,200+",  l: "Verified NGOs in directory" },
+              { n: "800+",    l: "Trusted mentors available" },
+              { n: "< 1 min", l: "Average response time" },
+            ].map(s => (
+              <div key={s.l} style={{ textAlign: "center" }}>
+                <p style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-1.5px", color: "var(--text-1)", marginBottom: 4 }}>
+                  {s.n}
+                </p>
+                <p style={{ fontSize: 13, color: "var(--text-3)" }}>{s.l}</p>
               </div>
             ))}
           </div>
         </div>
-      </section>
-
-      {/* Stats */}
-      <section id="stats" className="border-y border-gray-100 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((s) => {
-              const Icon = s.icon
-              return (
-                <div key={s.label} className="text-center">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
-                    style={{ background: "var(--primary-light)" }}>
-                    <Icon size={20} style={{ color: "var(--primary)" }} />
-                  </div>
-                  <p className="text-3xl font-bold text-gray-900 mb-1">{s.number}</p>
-                  <p className="text-sm text-gray-500">{s.label}</p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
+      </div>
 
       {/* Features */}
-      <section id="features" className="max-w-6xl mx-auto px-6 py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Everything you need, in one place
-          </h2>
-          <p className="text-gray-500 max-w-xl mx-auto">
-            SafeHer is more than an app — it's a complete safety ecosystem
-            designed around your needs.
+      <section id="features" style={{ maxWidth: 1200, margin: "0 auto", padding: "96px 48px" }}>
+        <div style={{ marginBottom: 56 }}>
+          <p className="t-label" style={{ marginBottom: 12 }}>Everything You Need</p>
+          <h2 className="t-h1" style={{ marginBottom: 16 }}>Built for real emergencies</h2>
+          <p className="t-body" style={{ maxWidth: 480, fontSize: 16 }}>
+            Every feature is designed for moments that matter — when you need
+            help fast, or just need someone to listen.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {features.map((f) => {
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
+          {features.map(f => {
             const Icon = f.icon
             return (
-              <div key={f.title}
-                className="bg-white rounded-xl p-5 border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all group cursor-default"
-                style={{ boxShadow: "var(--shadow-sm)" }}>
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                  style={{ background: f.color }}>
-                  <Icon size={20} color={f.iconColor} strokeWidth={2} />
+              <div key={f.title} className="card card-interactive" style={{ padding: 24 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: f.color,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: 16
+                }}>
+                  <Icon size={20} color={f.ic} strokeWidth={2} />
                 </div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)", marginBottom: 8 }}>
+                  {f.title}
+                </h3>
+                <p style={{ fontSize: 12.5, color: "var(--text-3)", lineHeight: 1.6 }}>
+                  {f.desc}
+                </p>
               </div>
             )
           })}
@@ -185,59 +210,78 @@ export default function Home() {
       </section>
 
       {/* How it works */}
-      <section className="bg-white border-y border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-24">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
-            <p className="text-gray-500">Get started in three simple steps</p>
+      <div style={{ background: "var(--black)" }}>
+        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "96px 48px" }}>
+          <div style={{ marginBottom: 56 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9b9b9b", marginBottom: 12 }}>
+              Simple Process
+            </p>
+            <h2 className="t-h1" style={{ color: "white", marginBottom: 16 }}>How It Works</h2>
+            <p style={{ fontSize: 16, color: "#9b9b9b", maxWidth: 440 }}>
+              Get started in minutes. No complicated setup required.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 40 }}>
             {steps.map((s, i) => (
-              <div key={s.step} className="relative text-center">
+              <div key={s.n} style={{ position: "relative" }}>
                 {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-px bg-gray-200" />
+                  <div style={{
+                    position: "absolute", top: 28, left: "60%",
+                    width: "80%", height: 1, background: "#333"
+                  }} />
                 )}
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 text-xl font-bold text-white"
-                  style={{ background: "var(--primary)" }}>
-                  {s.step}
+                <div style={{
+                  width: 56, height: 56, borderRadius: 16,
+                  border: "1px solid #333", background: "#111",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 18, fontWeight: 800, color: "var(--purple)",
+                  marginBottom: 20
+                }}>
+                  {s.n}
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "white", marginBottom: 10 }}>
+                  {s.title}
+                </h3>
+                <p style={{ fontSize: 14, color: "#9b9b9b", lineHeight: 1.7 }}>
+                  {s.desc}
+                </p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* Testimonials */}
-      <section className="max-w-6xl mx-auto px-6 py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Stories That Matter</h2>
-          <p className="text-gray-500">Real women, real impact.</p>
+      <section id="ourimpact" style={{ maxWidth: 1200, margin: "0 auto", padding: "96px 48px" }}>
+        <div style={{ marginBottom: 56 }}>
+          <p className="t-label" style={{ marginBottom: 12 }}>Stories That Matter</p>
+          <h2 className="t-h1">Real women, real impact</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((t) => (
-            <div key={t.name}
-              className="bg-white rounded-xl p-6 border border-gray-100"
-              style={{ boxShadow: "var(--shadow-sm)" }}>
-              <div className="flex gap-1 mb-4">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
+          {testimonials.map(t => (
+            <div key={t.name} className="card" style={{ padding: 28 }}>
+              <div style={{ display: "flex", gap: 3, marginBottom: 20 }}>
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} size={14} fill="#f59e0b" color="#f59e0b" />
                 ))}
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed mb-5 italic">
+              <p style={{ fontSize: 15, color: "var(--text-2)", lineHeight: 1.7, marginBottom: 24, fontStyle: "italic" }}>
                 "{t.quote}"
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white"
-                  style={{ background: "var(--primary)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: "var(--purple)", color: "white",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 700
+                }}>
                   {t.name[0]}
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-gray-900">{t.name}</p>
-                  <p className="text-xs text-gray-400">{t.location}</p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text-1)" }}>{t.name}</p>
+                  <p style={{ fontSize: 12, color: "var(--text-3)" }}>{t.city}, India</p>
                 </div>
               </div>
             </div>
@@ -246,39 +290,49 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section id="about" className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="rounded-2xl p-12 text-center text-white"
-          style={{ background: "var(--primary)" }}>
-          <h2 className="text-3xl font-bold mb-4">Ready to Feel Safer?</h2>
-          <p className="text-violet-200 mb-8 max-w-lg mx-auto">
-            Join thousands of women who trust SafeHer every day.
-            Free, private, and always here for you.
-          </p>
-          <button
-            onClick={() => navigate("/login")}
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold bg-white hover:bg-violet-50 transition-all"
-            style={{ color: "var(--primary)" }}>
+      <section id="about" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 48px 96px" }}>
+        <div style={{
+          background: "var(--purple)", borderRadius: 28,
+          padding: "64px 64px", textAlign: "center"
+        }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#c4b5fd", marginBottom: 16 }}>
             Join SafeHer Today
-            <ArrowRight size={16} />
-          </button>
+          </p>
+          <h2 className="t-h1" style={{ color: "white", marginBottom: 16 }}>
+            Ready to feel safer?
+          </h2>
+          <p style={{ fontSize: 16, color: "#c4b5fd", marginBottom: 36, maxWidth: 440, margin: "0 auto 36px" }}>
+            Thousands of women trust SafeHer every day. Free, private, and always here for you.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            <button className="btn btn-lg" onClick={() => navigate("/login")}
+              style={{ background: "white", color: "var(--purple)", fontWeight: 700 }}>
+              Get Started Free <ArrowRight size={16} />
+            </button>
+            <button className="btn btn-lg" onClick={() => navigate("/login")}
+              style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)" }}>
+              <Phone size={16} /> Emergency: 1091
+            </button>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center"
-              style={{ background: "var(--primary)" }}>
+      <footer style={{ borderTop: "1px solid var(--border)", background: "var(--white)" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 48px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 24, height: 24, borderRadius: 6, background: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Shield size={12} color="white" />
             </div>
-            <span className="text-sm font-semibold text-gray-900">SafeHer</span>
+            <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.5px" }}>
+              Safe<span style={{ color: "var(--purple)" }}>Her</span>
+            </span>
           </div>
-          <p className="text-xs text-gray-400">
+          <p style={{ fontSize: 13, color: "var(--text-3)" }}>
             Made with care for every woman who deserves to feel safe
           </p>
-          <p className="text-xs text-gray-400">
-            © 2024 SafeHer. All rights reserved.
+          <p style={{ fontSize: 13, color: "var(--text-3)" }}>
+            © 2024 SafeHer
           </p>
         </div>
       </footer>

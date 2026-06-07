@@ -1,99 +1,100 @@
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
-import { Shield, Menu, X } from "lucide-react"
-import { useState } from "react"
+import { Shield, Menu, X, ArrowRight } from "lucide-react"
 
 export default function Navbar() {
   const navigate = useNavigate()
   const { currentUser } = useAuth()
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [open, setOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-100"
-      style={{ boxShadow: "var(--shadow-sm)" }}>
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-
+    <header style={{
+      position: "sticky", top: 0, zIndex: 50,
+      background: "rgba(255,255,255,0.92)",
+      backdropFilter: "blur(12px)",
+      borderBottom: "1px solid var(--border)",
+    }}>
+      <div style={{
+        maxWidth: 1200, margin: "0 auto",
+        padding: "0 48px", height: 64,
+        display: "flex", alignItems: "center", justifyContent: "space-between"
+      }}>
         {/* Logo */}
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "var(--primary)" }}>
+        <button onClick={() => navigate("/")} style={{
+          display: "flex", alignItems: "center", gap: 10,
+          background: "none", border: "none", cursor: "pointer"
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: "var(--purple)",
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
             <Shield size={16} color="white" strokeWidth={2.5} />
           </div>
-          <span className="text-base font-700 text-gray-900 tracking-tight">
-            Safe<span style={{ color: "var(--primary)" }}>Her</span>
+          <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.5px", color: "var(--black)" }}>
+            Safe<span style={{ color: "var(--purple)" }}>Her</span>
           </span>
         </button>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8">
-          {[
-            { label: "Features", href: "#features" },
-            { label: "Our Impact", href: "#stats" },
-            { label: "About", href: "#about" },
-          ].map((item) => (
-            <a key={item.label} href={item.href}
-              className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
-              {item.label}
+        {/* Desktop links */}
+        <nav style={{ display: "flex", gap: 36 }} className="hidden md:flex">
+          {["Features", "Our Impact", "Community", "About"].map((l) => (
+            <a key={l} href={`#${l.toLowerCase().replace(" ", "")}`} style={{
+              fontSize: 14, fontWeight: 500,
+              color: "var(--text-2)", textDecoration: "none",
+              transition: "color 0.2s"
+            }}
+            onMouseEnter={e => e.target.style.color = "var(--black)"}
+            onMouseLeave={e => e.target.style.color = "var(--text-2)"}>
+              {l}
             </a>
           ))}
         </nav>
 
         {/* CTA */}
-        <div className="hidden md:flex items-center gap-3">
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {currentUser ? (
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="px-4 py-2 rounded-lg text-sm font-600 text-white"
-              style={{ background: "var(--primary)" }}>
-              Go to Dashboard
+            <button className="btn btn-dark" onClick={() => navigate("/dashboard")}>
+              Dashboard <ArrowRight size={14} />
             </button>
           ) : (
             <>
-              <button
-                onClick={() => navigate("/login")}
-                className="px-4 py-2 rounded-lg text-sm font-500 text-gray-700 hover:bg-gray-100">
+              <button className="btn btn-ghost btn-sm" onClick={() => navigate("/login")}>
                 Sign In
               </button>
-              <button
-                onClick={() => navigate("/login")}
-                className="px-4 py-2 rounded-lg text-sm font-600 text-white"
-                style={{ background: "var(--primary)" }}>
+              <button className="btn btn-dark btn-sm" onClick={() => navigate("/login")}>
                 Get Started
               </button>
             </>
           )}
+          <button
+            onClick={() => setOpen(!open)}
+            style={{ background: "none", border: "none", cursor: "pointer", display: "none", padding: 8 }}
+            className="md-hidden"
+            aria-label="Menu">
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
-
-        {/* Mobile menu button */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden p-2 rounded-lg hover:bg-gray-100"
-          aria-label="Toggle menu">
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
       </div>
 
       {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-6 py-4 space-y-3 animate-fade-in">
-          {["Features", "Our Impact", "About"].map((item) => (
-            <a key={item} href={`#${item.toLowerCase().replace(" ", "")}`}
-              className="block text-sm text-gray-600 hover:text-gray-900 py-1">
-              {item}
-            </a>
+      {open && (
+        <div style={{
+          borderTop: "1px solid var(--border)",
+          background: "var(--white)",
+          padding: "20px 24px",
+        }} className="anim-fade-in">
+          {["Features", "Our Impact", "Community", "About"].map((l) => (
+            <a key={l} href={`#${l.toLowerCase()}`} style={{
+              display: "block", padding: "10px 0",
+              fontSize: 15, color: "var(--text-2)",
+              textDecoration: "none", borderBottom: "1px solid var(--border)"
+            }}>{l}</a>
           ))}
-          <div className="pt-3 border-t border-gray-100 flex flex-col gap-2">
-            <button onClick={() => navigate("/login")}
-              className="w-full py-2 rounded-lg text-sm font-500 text-gray-700 border border-gray-200 hover:bg-gray-50">
-              Sign In
-            </button>
-            <button onClick={() => navigate("/login")}
-              className="w-full py-2 rounded-lg text-sm font-600 text-white"
-              style={{ background: "var(--primary)" }}>
-              Get Started
-            </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}>
+            <button className="btn btn-outline" onClick={() => navigate("/login")}>Sign In</button>
+            <button className="btn btn-dark" onClick={() => navigate("/login")}>Get Started</button>
           </div>
         </div>
       )}
