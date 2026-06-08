@@ -1,181 +1,132 @@
-// AIAssistant.jsx - AI Safety Chatbot powered by Claude
 import { useState, useEffect, useRef } from "react"
 import AppLayout from "@/components/layout/AppLayout"
 import { chatAPI } from "@/lib/api"
+import { Send, Bot, User, RotateCcw } from "lucide-react"
 
-// Suggested starter questions to help users begin
 const suggestions = [
-  "what should i do if i feel unsafe walking home?",
-  "what are my legal rights if i face domestic violence?",
-  "how do i file a police complaint safely?",
-  "i'm feeling very anxious and scared, can you help?",
-  "what is the POSH act and how does it protect me?",
-  "how do i find an ngo near me for shelter?",
+  "What should I do if I feel unsafe walking home?",
+  "What are my legal rights if I face domestic violence?",
+  "How do I file a police complaint safely?",
+  "What is the POSH Act and how does it protect me?",
+  "How do I find an NGO near me for shelter?",
+  "I'm feeling very anxious and scared, can you help?",
 ]
 
-// A single chat message bubble
-function MessageBubble({ message }) {
-  const isUser = message.role === "user"
-
+function Message({ msg }) {
+  const isUser = msg.role === "user"
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
-      {/* Sakhi avatar — only show on AI messages */}
+    <div style={{ display: "flex", gap: 12, justifyContent: isUser ? "flex-end" : "flex-start", marginBottom: 16 }}>
       {!isUser && (
-        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mr-2 mt-1"
-          style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-          🤖
+        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+          <Bot size={16} color="white" />
         </div>
       )}
+      <div style={{
+        maxWidth: "72%", padding: "12px 16px", borderRadius: 16,
+        borderBottomRightRadius: isUser ? 4 : 16,
+        borderBottomLeftRadius: isUser ? 16 : 4,
+        background: isUser ? "var(--purple)" : "var(--white)",
+        color: isUser ? "white" : "var(--text-1)",
+        fontSize: 14, lineHeight: 1.7,
+        boxShadow: "var(--shadow-xs)",
+        border: isUser ? "none" : "1px solid var(--border)"
+      }}>
+        {msg.content.split("\n").map((line, i) => (
+          <span key={i}>{line}{i < msg.content.split("\n").length - 1 && <br />}</span>
+        ))}
+      </div>
+      {isUser && (
+        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--bg-muted)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+          <User size={16} color="var(--text-2)" />
+        </div>
+      )}
+    </div>
+  )
+}
 
-      <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-        isUser
-          ? "text-white rounded-tr-sm"
-          : "bg-white border border-purple-100 text-purple-800 rounded-tl-sm"
-        }`}
-        style={isUser
-          ? { background: "linear-gradient(135deg, #a855f7, #ec4899)" }
-          : {}}>
-        {/* Render message with line breaks */}
-        {message.content.split("\n").map((line, i) => (
-          <span key={i}>
-            {line}
-            {i < message.content.split("\n").length - 1 && <br />}
-          </span>
+function TypingIndicator() {
+  return (
+    <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Bot size={16} color="white" />
+      </div>
+      <div style={{ padding: "14px 18px", borderRadius: 16, borderBottomLeftRadius: 4, background: "var(--white)", border: "1px solid var(--border)", display: "flex", gap: 5, alignItems: "center" }}>
+        {[0,1,2].map(i => (
+          <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--text-3)", animation: "pulse 1.2s infinite", animationDelay: `${i*0.2}s` }} />
         ))}
       </div>
     </div>
   )
 }
 
-// Animated typing indicator
-function TypingIndicator() {
-  return (
-    <div className="flex justify-start mb-4">
-      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mr-2"
-        style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-        🤖
-      </div>
-      <div className="bg-white border border-purple-100 px-4 py-3 rounded-2xl rounded-tl-sm">
-        <div className="flex gap-1 items-center h-4">
-          {[0, 1, 2].map((i) => (
-            <div key={i}
-              className="w-2 h-2 rounded-full bg-purple-300 animate-bounce"
-              style={{ animationDelay: `${i * 0.15}s` }} />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function AIAssistant() {
-  // messages is an array of { role: "user" | "assistant", content: "..." }
-  const [messages, setMessages]   = useState([])
-  const [input, setInput]         = useState("")
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState("")
-
-  // Ref to the bottom of the chat — used to auto-scroll
+export default function AIAssistant() {
+  const [messages, setMessages] = useState([])
+  const [input, setInput]       = useState("")
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState("")
   const bottomRef = useRef(null)
 
-  // Auto-scroll to bottom whenever messages change
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, loading])
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages, loading])
 
   async function sendMessage(text) {
-    const messageText = text || input.trim()
-    if (!messageText || loading) return
-
-    setInput("")
-    setError("")
-
-    // Add user message to chat immediately (feels responsive)
-    const newMessages = [
-      ...messages,
-      { role: "user", content: messageText }
-    ]
-    setMessages(newMessages)
-    setLoading(true)
-
+    const t = text || input.trim()
+    if (!t || loading) return
+    setInput(""); setError("")
+    const newMsgs = [...messages, { role: "user", content: t }]
+    setMessages(newMsgs); setLoading(true)
     try {
-      // Send full conversation history so Claude has context
-      const response = await chatAPI.sendMessage(
-        newMessages.map((m) => ({ role: m.role, content: m.content }))
-      )
-
-      // Add AI response to chat
-      setMessages([
-        ...newMessages,
-        { role: "assistant", content: response.message }
-      ])
-    } catch (err) {
-      setError("sakhi couldn't respond right now 💜 please try again")
-      // Remove the user message if the API call failed
-      setMessages(messages)
-    }
-
+      const res = await chatAPI.sendMessage(newMsgs.map(m => ({ role: m.role, content: m.content })))
+      setMessages([...newMsgs, { role: "assistant", content: res.message }])
+    } catch { setError("Sakhi could not respond right now. Please try again."); setMessages(messages) }
     setLoading(false)
-  }
-
-  function handleKeyDown(e) {
-    // Send on Enter, but allow Shift+Enter for new lines
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
-    }
-  }
-
-  function clearChat() {
-    setMessages([])
-    setError("")
   }
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-screen max-h-screen p-6">
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh", padding: "0 0" }}>
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 flex-shrink-0">
-          <div>
-            <h1 className="text-3xl font-semibold text-purple-800">
-              sakhi — ai assistant 🤖
-            </h1>
-            <p className="text-purple-400 text-sm mt-1">
-              your compassionate safety guide, available 24/7 💜
-            </p>
+        <div style={{ padding: "24px 40px", borderBottom: "1px solid var(--border)", background: "var(--white)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Bot size={22} color="white" />
+            </div>
+            <div>
+              <h1 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-1)", letterSpacing: "-0.5px" }}>Sakhi</h1>
+              <p style={{ fontSize: 12, color: "var(--text-3)" }}>AI Safety Assistant · Always available</p>
+            </div>
           </div>
           {messages.length > 0 && (
-            <button onClick={clearChat}
-              className="text-xs text-purple-400 hover:text-purple-600 border border-purple-200 px-3 py-1.5 rounded-xl transition-all">
-              clear chat
+            <button className="btn btn-ghost btn-sm" onClick={() => setMessages([])}>
+              <RotateCcw size={14} /> Clear Chat
             </button>
           )}
         </div>
 
-        {/* Chat area */}
-        <div className="flex-1 overflow-y-auto bg-white rounded-2xl border border-purple-100 p-5 mb-4">
-
-          {/* Welcome state — shown when no messages yet */}
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "32px 40px", background: "var(--bg)" }}>
           {messages.length === 0 && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
-                style={{ background: "linear-gradient(135deg, #fce7f3, #ede9fe)" }}>
-                🤖
+            <div style={{ textAlign: "center", paddingTop: 40 }}>
+              <div style={{ width: 72, height: 72, borderRadius: 22, background: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                <Bot size={36} color="white" />
               </div>
-              <h2 className="text-base font-semibold text-purple-700 mb-2">
-                hi, i'm sakhi 💜
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-1)", marginBottom: 8, letterSpacing: "-0.5px" }}>
+                Hi, I'm Sakhi
               </h2>
-              <p className="text-sm text-purple-400 max-w-sm mx-auto mb-8">
-                i'm here to help with safety advice, legal information,
-                emotional support, and connecting you with the right resources.
+              <p style={{ fontSize: 14, color: "var(--text-3)", maxWidth: 380, margin: "0 auto 36px", lineHeight: 1.7 }}>
+                I'm here to help with safety advice, legal information, emotional support, and connecting you with the right resources.
               </p>
-
-              {/* Suggestion chips */}
-              <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
-                {suggestions.map((s) => (
-                  <button key={s} onClick={() => sendMessage(s)}
-                    className="px-3 py-2 rounded-xl text-xs text-purple-600 bg-purple-50 border border-purple-100 hover:bg-purple-100 transition-all text-left">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 600, margin: "0 auto" }}>
+                {suggestions.map(s => (
+                  <button key={s} onClick={() => sendMessage(s)} style={{
+                    padding: "10px 16px", borderRadius: 100,
+                    fontSize: 13, color: "var(--text-2)",
+                    background: "var(--white)", border: "1.5px solid var(--border)",
+                    cursor: "pointer", textAlign: "left",
+                    transition: "all 0.15s", fontFamily: "inherit"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--purple)"; e.currentTarget.style.color = "var(--purple)" }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-2)" }}>
                     {s}
                   </button>
                 ))}
@@ -183,51 +134,39 @@ function AIAssistant() {
             </div>
           )}
 
-          {/* Messages */}
-          {messages.map((msg, i) => (
-            <MessageBubble key={i} message={msg} />
-          ))}
-
-          {/* Typing indicator */}
+          {messages.map((m, i) => <Message key={i} msg={m} />)}
           {loading && <TypingIndicator />}
-
-          {/* Error message */}
           {error && (
-            <div className="text-center py-2">
-              <p className="text-xs text-pink-500 bg-pink-50 px-4 py-2 rounded-xl inline-block border border-pink-100">
-                {error}
-              </p>
+            <div style={{ textAlign: "center", padding: 8 }}>
+              <span style={{ fontSize: 13, color: "var(--red)", background: "#fef2f2", padding: "8px 16px", borderRadius: 100 }}>{error}</span>
             </div>
           )}
-
-          {/* Invisible element at bottom for auto-scroll */}
           <div ref={bottomRef} />
         </div>
 
-        {/* Input area */}
-        <div className="flex-shrink-0">
-          <div className="flex gap-3 items-end">
+        {/* Input */}
+        <div style={{ padding: "20px 40px", borderTop: "1px solid var(--border)", background: "var(--white)" }}>
+          <div style={{ display: "flex", gap: 12, maxWidth: 800, margin: "0 auto" }}>
             <textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="ask sakhi anything... 💜"
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+              placeholder="Ask Sakhi anything..."
               rows={1}
-              className="flex-1 px-4 py-3 rounded-2xl text-sm border-2 border-purple-100 bg-purple-50 focus:outline-none focus:border-purple-400 focus:bg-white transition-all resize-none placeholder:text-purple-200 text-purple-800"
-              style={{ maxHeight: "120px" }}
+              className="input"
+              style={{ flex: 1, resize: "none", maxHeight: 120, lineHeight: 1.6 }}
             />
             <button
               onClick={() => sendMessage()}
               disabled={!input.trim() || loading}
-              className="px-5 py-3 rounded-2xl text-white text-sm font-medium transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-              style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-              send 💜
+              className="btn btn-purple"
+              style={{ flexShrink: 0, opacity: !input.trim() || loading ? 0.5 : 1 }}
+              aria-label="Send message">
+              <Send size={16} />
             </button>
           </div>
-
-          {/* Disclaimer */}
-          <p className="text-xs text-purple-300 text-center mt-3">
-            sakhi provides general guidance only · always call 100 or 1091 in an emergency
+          <p style={{ fontSize: 11, color: "var(--text-3)", textAlign: "center", marginTop: 10 }}>
+            Sakhi provides general guidance only · Always call 100 or 1091 in an emergency
           </p>
         </div>
 
@@ -235,5 +174,3 @@ function AIAssistant() {
     </AppLayout>
   )
 }
-
-export default AIAssistant

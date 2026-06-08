@@ -1,370 +1,231 @@
-// SOS.jsx - Emergency SOS system
-// Designed for high-stress moments: large targets, clear actions, calm colours
 import { useState, useEffect } from "react"
 import AppLayout from "@/components/layout/AppLayout"
 import { useAuth } from "@/context/AuthContext"
 import { emergencyAPI } from "@/lib/api"
+import { AlertTriangle, Phone, MapPin, Plus, Trash2, X } from "lucide-react"
 
-// National helpline numbers
 const helplines = [
-  { name: "women helpline",        number: "1091", icon: "🆘" },
-  { name: "police",                number: "100",  icon: "👮" },
-  { name: "ambulance",             number: "108",  icon: "🚑" },
-  { name: "domestic violence",     number: "181",  icon: "💜" },
-  { name: "child helpline",        number: "1098", icon: "🧒" },
-  { name: "mental health (vandrevala)", number: "1860-2662-345", icon: "🧠" },
+  { name: "Women Helpline",     number: "1091", color: "#fef2f2", tc: "#991b1b" },
+  { name: "Police",             number: "100",  color: "#eff6ff", tc: "#1e40af" },
+  { name: "Ambulance",          number: "108",  color: "#f0fdf4", tc: "#166534" },
+  { name: "Domestic Violence",  number: "181",  color: "#f5f3ff", tc: "#5b21b6" },
+  { name: "Child Helpline",     number: "1098", color: "#fdf4ff", tc: "#6b21a8" },
+  { name: "Mental Health",      number: "1860-2662-345", color: "#fffbeb", tc: "#92400e" },
 ]
 
-const relationships = ["mother", "father", "sister", "brother", "friend", "partner", "other"]
+const relationships = ["mother","father","sister","brother","friend","partner","other"]
 
-function SOS() {
+export default function SOS() {
   const { currentUser } = useAuth()
+  const [sosActive, setSosActive]   = useState(false)
+  const [location, setLocation]     = useState(null)
+  const [locating, setLocating]     = useState(false)
+  const [locError, setLocError]     = useState("")
+  const [contacts, setContacts]     = useState([])
+  const [loadingC, setLoadingC]     = useState(true)
+  const [showForm, setShowForm]     = useState(false)
+  const [saving, setSaving]         = useState(false)
+  const [newC, setNewC]             = useState({ name: "", phone: "", relationship: "friend" })
 
-  // SOS state
-  const [sosActive, setSosActive]       = useState(false)
-  const [location, setLocation]         = useState(null)
-  const [locationError, setLocationError] = useState("")
-  const [locating, setLocating]         = useState(false)
-
-  // Contacts state
-  const [contacts, setContacts]         = useState([])
-  const [loadingContacts, setLoadingContacts] = useState(true)
-  const [showAddForm, setShowAddForm]   = useState(false)
-  const [saving, setSaving]             = useState(false)
-
-  // New contact form
-  const [newContact, setNewContact] = useState({
-    name: "", phone: "", relationship: "friend"
-  })
-
-  // Load contacts on mount
-  useEffect(() => {
-    if (currentUser?.uid) loadContacts()
-  }, [currentUser])
+  useEffect(() => { if (currentUser?.uid) loadContacts() }, [currentUser])
 
   async function loadContacts() {
-    setLoadingContacts(true)
-    try {
-      const res = await emergencyAPI.getContacts(currentUser.uid)
-      setContacts(res.data)
-    } catch {
-      // silently fail — contacts just won't show
-    }
-    setLoadingContacts(false)
+    setLoadingC(true)
+    try { const r = await emergencyAPI.getContacts(currentUser.uid); setContacts(r.data) } catch {}
+    setLoadingC(false)
   }
 
-  // ── SOS Trigger ──
   function triggerSOS() {
-    setSosActive(true)
-    setLocating(true)
-    setLocationError("")
-
-    // Request GPS location from browser
-    if (!navigator.geolocation) {
-      setLocationError("location not supported on this device")
-      setLocating(false)
-      return
-    }
-
+    setSosActive(true); setLocating(true); setLocError("")
+    if (!navigator.geolocation) { setLocError("Location not supported"); setLocating(false); return }
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocation({
-          lat: pos.coords.latitude.toFixed(6),
-          lng: pos.coords.longitude.toFixed(6),
-          accuracy: Math.round(pos.coords.accuracy),
-        })
-        setLocating(false)
-      },
-      (err) => {
-        setLocationError("couldn't get location — please share manually 💜")
-        setLocating(false)
-      },
+      p => { setLocation({ lat: p.coords.latitude.toFixed(5), lng: p.coords.longitude.toFixed(5), acc: Math.round(p.coords.accuracy) }); setLocating(false) },
+      () => { setLocError("Could not get location — please share manually"); setLocating(false) },
       { enableHighAccuracy: true, timeout: 10000 }
     )
   }
 
-  function cancelSOS() {
-    setSosActive(false)
-    setLocation(null)
-    setLocationError("")
-  }
-
-  // ── Add Contact ──
   async function handleAddContact(e) {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      await emergencyAPI.addContact({
-        userId: currentUser.uid,
-        ...newContact,
-      })
-      setNewContact({ name: "", phone: "", relationship: "friend" })
-      setShowAddForm(false)
-      await loadContacts()
-    } catch (err) {
-      alert(err.message)
-    }
+    e.preventDefault(); setSaving(true)
+    try { await emergencyAPI.addContact({ userId: currentUser.uid, ...newC }); setNewC({ name: "", phone: "", relationship: "friend" }); setShowForm(false); await loadContacts() } catch (err) { alert(err.message) }
     setSaving(false)
   }
 
-  // ── Delete Contact ──
   async function handleDelete(id) {
-    if (!confirm("remove this contact?")) return
-    try {
-      await emergencyAPI.deleteContact(id)
-      setContacts((prev) => prev.filter((c) => c._id !== id))
-    } catch {
-      alert("couldn't remove contact, please try again")
-    }
+    if (!confirm("Remove this contact?")) return
+    try { await emergencyAPI.deleteContact(id); setContacts(p => p.filter(c => c._id !== id)) } catch {}
   }
-
-  // Google Maps link for current location
-  const mapsLink = location
-    ? `https://www.google.com/maps?q=${location.lat},${location.lng}`
-    : null
 
   return (
     <AppLayout>
-      <div className="p-6 max-w-3xl mx-auto">
+      <div style={{ padding: "40px 48px", maxWidth: 800, margin: "0 auto" }}>
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-purple-800 mb-1">
-            sos emergency 🆘
-          </h1>
-          <p className="text-purple-400 text-sm">
-            you are safe. help is one tap away 💜
-          </p>
+        <div style={{ marginBottom: 36 }}>
+          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-1px", marginBottom: 6 }}>SOS Emergency</h1>
+          <p style={{ fontSize: 14, color: "var(--text-3)" }}>You are safe here. Help is one tap away.</p>
         </div>
 
-        {/* ── SOS ACTIVE STATE ── */}
+        {/* SOS Active */}
         {sosActive ? (
-          <div className="space-y-5 mb-8">
-
-            {/* Active alert banner */}
-            <div className="p-5 rounded-2xl border-2 border-pink-300 text-center"
-              style={{ background: "linear-gradient(135deg, #fce7f3, #fdf2f8)" }}>
-              <div className="text-4xl mb-2 animate-pulse">🆘</div>
-              <h2 className="text-lg font-bold text-pink-700 mb-1">
-                sos activated
-              </h2>
-              <p className="text-sm text-pink-500">
-                call your emergency contacts below or dial a helpline
-              </p>
-            </div>
-
-            {/* Location card */}
-            <div className="bg-white rounded-2xl border border-purple-100 p-5">
-              <h3 className="text-sm font-semibold text-purple-700 mb-3">
-                📍 your location
-              </h3>
-              {locating ? (
-                <div className="flex items-center gap-2 text-purple-400 text-sm animate-pulse">
-                  <div className="w-3 h-3 rounded-full bg-purple-300 animate-ping" />
-                  getting your location...
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ background: "var(--black)", borderRadius: 20, padding: 28, marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <AlertTriangle size={26} color="white" />
                 </div>
-              ) : location ? (
-                <div className="space-y-2">
-                  <p className="text-xs text-purple-500">
-                    lat: {location.lat} · lng: {location.lng}
-                  </p>
-             <p className="text-xs text-purple-400">
-  accuracy: ±{location.accuracy}m
-</p>
-
-<a
-  href={mapsLink}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="inline-flex items-center gap-2 mt-2 px-4 py-2 rounded-xl text-xs font-medium text-white"
-  style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}
->
-  📍 open in google maps
-</a>
-
-<p className="text-xs text-purple-300 mt-1">
-  share this link with someone you trust
-</p>
+                <div>
+                  <p style={{ color: "white", fontSize: 18, fontWeight: 800 }}>SOS Activated</p>
+                  <p style={{ color: "#9b9b9b", fontSize: 13 }}>Call your emergency contacts below</p>
                 </div>
-              ) : (
-                <p className="text-sm text-pink-500">{locationError}</p>
-              )}
-            </div>
+              </div>
 
-            {/* Emergency contacts to call */}
-            {contacts.length > 0 && (
-              <div className="bg-white rounded-2xl border border-purple-100 p-5">
-                <h3 className="text-sm font-semibold text-purple-700 mb-3">
-                  💜 call your trusted contacts
-                </h3>
-                <div className="space-y-2">
-                  {contacts.map((c) => (
-                    <a key={c._id} href={`tel:${c.phone}`}
-                      className="flex items-center justify-between p-3 rounded-xl border border-purple-100 hover:bg-purple-50 transition-all">
+              {/* Location */}
+              <div style={{ background: "#111", borderRadius: 14, padding: "16px 20px", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <MapPin size={14} color="#9b9b9b" />
+                  <span style={{ fontSize: 12, color: "#9b9b9b", fontWeight: 600 }}>Your Location</span>
+                </div>
+                {locating ? (
+                  <p style={{ color: "#9b9b9b", fontSize: 13 }}>Getting your location...</p>
+                ) : location ? (
+                  <div>
+                    <p style={{ color: "white", fontSize: 13, marginBottom: 8 }}>
+                      {location.lat}, {location.lng} (±{location.acc}m)
+                    </p>
+                    <a href={`https://www.google.com/maps?q=${location.lat},${location.lng}`} target="_blank" rel="noopener noreferrer"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, background: "var(--purple)", color: "white", fontSize: 12, fontWeight: 600, textDecoration: "none" }}>
+                      <MapPin size={12} /> Open in Google Maps
+                    </a>
+                  </div>
+                ) : <p style={{ color: "#ef4444", fontSize: 13 }}>{locError}</p>}
+              </div>
+
+              {/* Contacts to call */}
+              {contacts.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {contacts.map(c => (
+                    <a key={c._id} href={`tel:${c.phone}`} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "14px 18px", borderRadius: 12, background: "#111",
+                      textDecoration: "none", transition: "all 0.15s"
+                    }}>
                       <div>
-                        <p className="text-sm font-medium text-purple-800">{c.name}</p>
-                        <p className="text-xs text-purple-400">{c.relationship} · {c.phone}</p>
+                        <p style={{ color: "white", fontSize: 14, fontWeight: 600 }}>{c.name}</p>
+                        <p style={{ color: "#9b9b9b", fontSize: 12 }}>{c.relationship} · {c.phone}</p>
                       </div>
-                      <div className="w-9 h-9 rounded-full bg-green-50 border border-green-200 flex items-center justify-center text-base">
-                        📞
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--green)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Phone size={16} color="white" />
                       </div>
                     </a>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            {/* Cancel button */}
-            <button onClick={cancelSOS}
-              className="w-full py-3 rounded-xl text-sm font-medium text-purple-500 border-2 border-purple-200 hover:bg-purple-50 transition-all">
-              i am safe now — cancel sos ✓
+            <button onClick={() => { setSosActive(false); setLocation(null) }} className="btn btn-outline" style={{ width: "100%" }}>
+              I Am Safe — Cancel SOS
             </button>
           </div>
-
         ) : (
-
-          /* ── NORMAL STATE ── */
-          <div className="mb-8">
-            {/* Big SOS button */}
-            <div className="text-center py-10">
-              <button
-                onClick={triggerSOS}
-                className="w-44 h-44 rounded-full text-white font-bold text-xl shadow-lg hover:scale-105 active:scale-95 transition-all border-4 border-pink-300 mx-auto flex flex-col items-center justify-center gap-2"
-                style={{ background: "linear-gradient(135deg, #ec4899, #a855f7)" }}>
-                <span className="text-4xl">🆘</span>
-                <span>tap for sos</span>
-              </button>
-              <p className="text-xs text-purple-400 mt-6 max-w-xs mx-auto">
-                pressing sos will capture your location and show your emergency contacts instantly
-              </p>
-            </div>
+          /* Big SOS button */
+          <div style={{ textAlign: "center", padding: "48px 0", marginBottom: 24 }}>
+            <button
+              onClick={triggerSOS}
+              style={{
+                width: 180, height: 180, borderRadius: "50%",
+                background: "var(--black)", border: "4px solid #dc2626",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: 10, cursor: "pointer", margin: "0 auto",
+                transition: "all 0.2s", color: "white",
+                boxShadow: "0 0 0 0 rgba(220,38,38,0.3)"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 0 0 16px rgba(220,38,38,0.1)"; e.currentTarget.style.transform = "scale(1.03)" }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 0 0 0 rgba(220,38,38,0.3)"; e.currentTarget.style.transform = "scale(1)" }}
+              aria-label="Activate SOS Emergency">
+              <AlertTriangle size={40} color="#dc2626" />
+              <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: "0.05em" }}>TAP FOR SOS</span>
+            </button>
+            <p style={{ fontSize: 13, color: "var(--text-3)", marginTop: 20, maxWidth: 300, margin: "20px auto 0" }}>
+              Pressing SOS will capture your GPS location and show your emergency contacts to call.
+            </p>
           </div>
         )}
 
-        {/* ── National Helplines ── */}
-        <div className="bg-white rounded-2xl border border-purple-100 p-5 mb-6">
-          <h2 className="text-sm font-semibold text-purple-700 mb-4">
-            📞 national helplines — always available
+        {/* Helplines */}
+        <div className="card" style={{ padding: 24, marginBottom: 24 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)", marginBottom: 16 }}>
+            National Helplines — Always Available
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {helplines.map((h) => (
-              <a key={h.number} href={`tel:${h.number}`}
-                className="flex items-center gap-2 p-3 rounded-xl border border-purple-100 hover:bg-purple-50 transition-all">
-                <span className="text-xl">{h.icon}</span>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+            {helplines.map(h => (
+              <a key={h.number} href={`tel:${h.number}`} style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "14px 16px",
+                borderRadius: 12, background: h.color, textDecoration: "none",
+                transition: "all 0.15s", border: "1px solid transparent"
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
+              onMouseLeave={e => e.currentTarget.style.transform = ""}>
+                <Phone size={16} color={h.tc} />
                 <div>
-                  <p className="text-xs font-semibold text-purple-700">{h.number}</p>
-                  <p className="text-xs text-purple-400">{h.name}</p>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: h.tc }}>{h.number}</p>
+                  <p style={{ fontSize: 11, color: h.tc, opacity: 0.7 }}>{h.name}</p>
                 </div>
               </a>
             ))}
           </div>
         </div>
 
-        {/* ── Emergency Contacts Manager ── */}
-        <div className="bg-white rounded-2xl border border-purple-100 p-5">
-          <div className="flex items-center justify-between mb-4">
+        {/* Emergency contacts manager */}
+        <div className="card" style={{ padding: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
             <div>
-              <h2 className="text-sm font-semibold text-purple-700">
-                💜 my emergency contacts
-              </h2>
-              <p className="text-xs text-purple-400 mt-0.5">
-                up to 5 trusted people
-              </p>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)", marginBottom: 2 }}>My Emergency Contacts</h2>
+              <p style={{ fontSize: 12, color: "var(--text-3)" }}>Up to 5 trusted people</p>
             </div>
             {contacts.length < 5 && (
-              <button
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="px-3 py-1.5 rounded-xl text-xs font-medium text-white transition-all"
-                style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-                {showAddForm ? "cancel" : "+ add contact"}
+              <button className="btn btn-purple btn-sm" onClick={() => setShowForm(!showForm)}>
+                {showForm ? <><X size={14}/> Cancel</> : <><Plus size={14}/> Add Contact</>}
               </button>
             )}
           </div>
 
-          {/* Add Contact Form */}
-          {showAddForm && (
-            <form onSubmit={handleAddContact}
-              className="mb-5 p-4 rounded-xl bg-purple-50 border border-purple-100 space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-purple-600 mb-1">
-                  name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newContact.name}
-                  onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                  placeholder="e.g. mum, best friend"
-                  className="w-full px-3 py-2 rounded-xl text-sm border-2 border-purple-100 bg-white focus:outline-none focus:border-purple-400 text-purple-800 placeholder:text-purple-200"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-purple-600 mb-1">
-                  phone number
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={newContact.phone}
-                  onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-                  placeholder="+91 98765 43210"
-                  className="w-full px-3 py-2 rounded-xl text-sm border-2 border-purple-100 bg-white focus:outline-none focus:border-purple-400 text-purple-800 placeholder:text-purple-200"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-purple-600 mb-1">
-                  relationship
-                </label>
-                <select
-                  value={newContact.relationship}
-                  onChange={(e) => setNewContact({ ...newContact, relationship: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl text-sm border-2 border-purple-100 bg-white focus:outline-none focus:border-purple-400 text-purple-800">
-                  {relationships.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
-              </div>
-              <button type="submit" disabled={saving}
-                className="w-full py-2.5 rounded-xl text-sm font-medium text-white transition-all"
-                style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-                {saving ? "saving... 💜" : "save contact 💜"}
+          {showForm && (
+            <form onSubmit={handleAddContact} style={{ background: "var(--bg-muted)", borderRadius: 14, padding: 20, marginBottom: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+              <input required value={newC.name} onChange={e => setNewC({...newC, name: e.target.value})} placeholder="Full name" className="input" />
+              <input required type="tel" value={newC.phone} onChange={e => setNewC({...newC, phone: e.target.value})} placeholder="Phone number" className="input" />
+              <select value={newC.relationship} onChange={e => setNewC({...newC, relationship: e.target.value})} className="input">
+                {relationships.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
+              </select>
+              <button type="submit" disabled={saving} className="btn btn-purple">
+                {saving ? "Saving..." : "Save Contact"}
               </button>
             </form>
           )}
 
-          {/* Contacts List */}
-          {loadingContacts ? (
-            <div className="space-y-2">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-14 bg-purple-50 rounded-xl animate-pulse" />
-              ))}
-            </div>
+          {loadingC ? (
+            <div style={{ height: 80, borderRadius: 12, background: "var(--border)", opacity: 0.4 }} />
           ) : contacts.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-2xl mb-2">💜</p>
-              <p className="text-sm text-purple-400">no emergency contacts yet</p>
-              <p className="text-xs text-purple-300 mt-1">
-                add trusted people who can help you in an emergency
-              </p>
+            <div style={{ textAlign: "center", padding: "32px 0" }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)", marginBottom: 4 }}>No contacts yet</p>
+              <p style={{ fontSize: 13, color: "var(--text-3)" }}>Add trusted people who can help in an emergency</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {contacts.map((c) => (
-                <div key={c._id}
-                  className="flex items-center justify-between p-3 rounded-xl border border-purple-100 hover:bg-purple-50 transition-all">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold text-white flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {contacts.map(c => (
+                <div key={c._id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderRadius: 12, border: "1px solid var(--border)", background: "var(--white)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--purple)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>
                       {c.name[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-purple-800">{c.name}</p>
-                      <p className="text-xs text-purple-400">{c.relationship} · {c.phone}</p>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{c.name}</p>
+                      <p style={{ fontSize: 12, color: "var(--text-3)" }}>{c.relationship} · {c.phone}</p>
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(c._id)}
-                    className="text-xs text-pink-400 hover:text-pink-600 transition-colors px-2 py-1">
-                    remove
+                  <button onClick={() => handleDelete(c._id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 8, borderRadius: 8, transition: "all 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.color = "var(--red)" }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text-3)" }}>
+                    <Trash2 size={15} />
                   </button>
                 </div>
               ))}
@@ -376,5 +237,3 @@ function SOS() {
     </AppLayout>
   )
 }
-
-export default SOS
