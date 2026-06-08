@@ -16,6 +16,7 @@ import EvidenceVault from "@/pages/EvidenceVault"
 import Community from "@/pages/Community"
 import AIAssistant from "@/pages/AIAssistant"
 import NotFound from "@/pages/NotFound"
+import CompleteProfile from "./pages/CompleteProfile";
 
 function App() {
   return (
@@ -67,6 +68,8 @@ function App() {
       {/* 404 catch-all */}
       <Route path="*" element={<NotFound />} />
 
+      <Route path="/complete-profile" element={<CompleteProfile />} />
+        <Route path="/dashboard" element={<Dashboard />} />
     </Routes>
   )
 }
