@@ -1,435 +1,200 @@
-// NearbyHelp.jsx - Find nearby police, hospitals and NGOs using Google Maps
 import { useState, useEffect, useRef } from "react"
 import AppLayout from "@/components/layout/AppLayout"
+import { MapPin, Phone, Navigation } from "lucide-react"
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
 
-// Place types to search for
 const categories = [
-  {
-    key: "police",
-    label: "police stations",
-    icon: "👮",
-    color: "#eff6ff",
-    border: "#bfdbfe",
-    text: "#1d4ed8",
-    query: "police station",
-  },
-  {
-    key: "hospital",
-    label: "hospitals",
-    icon: "🏥",
-    color: "#f0fdf4",
-    border: "#bbf7d0",
-    text: "#15803d",
-    query: "hospital",
-  },
-  {
-    key: "ngo",
-    label: "women's ngos",
-    icon: "🏢",
-    color: "#f5f3ff",
-    border: "#ddd6fe",
-    text: "#6d28d9",
-    query: "women ngo support centre",
-  },
-  {
-    key: "pharmacy",
-    label: "pharmacies",
-    icon: "💊",
-    color: "#fff7ed",
-    border: "#fed7aa",
-    text: "#c2410c",
-    query: "pharmacy",
-  },
+  { key:"police",   label:"Police Stations", icon:"👮", query:"police station",        color:"#eff6ff", tc:"#1e40af" },
+  { key:"hospital", label:"Hospitals",        icon:"🏥", query:"hospital",              color:"#f0fdf4", tc:"#166534" },
+  { key:"ngo",      label:"Women's NGOs",     icon:"🏢", query:"women ngo support",     color:"#f5f3ff", tc:"#5b21b6" },
+  { key:"pharmacy", label:"Pharmacies",       icon:"💊", query:"pharmacy",              color:"#fffbeb", tc:"#92400e" },
 ]
 
-// National helplines always visible
 const helplines = [
-  { name: "women helpline",    number: "1091", icon: "🆘" },
-  { name: "police",            number: "100",  icon: "👮" },
-  { name: "ambulance",         number: "108",  icon: "🚑" },
-  { name: "domestic violence", number: "181",  icon: "💜" },
+  { name:"Women Helpline",    number:"1091", color:"#fef2f2", tc:"#991b1b" },
+  { name:"Police",            number:"100",  color:"#eff6ff", tc:"#1e40af" },
+  { name:"Ambulance",         number:"108",  color:"#f0fdf4", tc:"#166534" },
+  { name:"Domestic Violence", number:"181",  color:"#f5f3ff", tc:"#5b21b6" },
 ]
 
-function NearbyHelp() {
-  const [location, setLocation]       = useState(null)
-  const [locError, setLocError]       = useState("")
-  const [locating, setLocating]       = useState(false)
+export default function NearbyHelp() {
+  const [location, setLocation]     = useState(null)
+  const [locError, setLocError]     = useState("")
+  const [locating, setLocating]     = useState(false)
   const [activeCategory, setCategory] = useState(categories[0])
-  const [places, setPlaces]           = useState([])
-  const [searching, setSearching]     = useState(false)
-  const [mapLoaded, setMapLoaded]     = useState(false)
+  const [places, setPlaces]         = useState([])
+  const [searching, setSearching]   = useState(false)
+  const [mapLoaded, setMapLoaded]   = useState(false)
+  const mapRef    = useRef(null)
+  const mapObjRef = useRef(null)
+  const serviceRef= useRef(null)
+  const markersRef= useRef([])
 
-  const mapRef     = useRef(null)
-  const mapObjRef  = useRef(null)
-  const serviceRef = useRef(null)
-  const markersRef = useRef([])
+  useEffect(()=>{
+    if(!MAPS_KEY) return
+    if(window.google){ setMapLoaded(true); return }
+    const s=document.createElement("script")
+    s.src=`https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places`
+    s.async=true; s.onload=()=>setMapLoaded(true); s.onerror=()=>setLocError("Failed to load Google Maps")
+    document.head.appendChild(s)
+  },[])
 
-  // Load Google Maps script dynamically
-  useEffect(() => {
-    if (!MAPS_KEY) return
-
-    // Check if already loaded
-    if (window.google) {
-      setMapLoaded(true)
-      return
-    }
-
-    const script = document.createElement("script")
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places`
-    script.async = true
-    script.onload = () => setMapLoaded(true)
-    script.onerror = () => setLocError("failed to load google maps")
-    document.head.appendChild(script)
-  }, [])
-
-  // Initialize map once loaded and location is known
-  useEffect(() => {
-    if (!mapLoaded || !location || !mapRef.current) return
-
-    mapObjRef.current = new window.google.maps.Map(mapRef.current, {
-      center: { lat: location.lat, lng: location.lng },
-      zoom: 14,
-      styles: [
-        { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-      ],
-    })
-
-    // Add marker for user's location
-    new window.google.maps.Marker({
-      position: { lat: location.lat, lng: location.lng },
-      map: mapObjRef.current,
-      title: "you are here",
-      icon: {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 10,
-        fillColor: "#a855f7",
-        fillOpacity: 1,
-        strokeColor: "#ffffff",
-        strokeWeight: 2,
-      },
-    })
-
-    serviceRef.current = new window.google.maps.places.PlacesService(
-      mapObjRef.current
-    )
-
-    // Search for the default category
+  useEffect(()=>{
+    if(!mapLoaded||!location||!mapRef.current) return
+    mapObjRef.current=new window.google.maps.Map(mapRef.current,{ center:{lat:location.lat,lng:location.lng}, zoom:14 })
+    new window.google.maps.Marker({ position:{lat:location.lat,lng:location.lng}, map:mapObjRef.current, title:"You are here" })
+    serviceRef.current=new window.google.maps.places.PlacesService(mapObjRef.current)
     searchNearby(activeCategory)
-  }, [mapLoaded, location])
+  },[mapLoaded,location])
 
-  // Get user location
   function getLocation() {
-    setLocating(true)
-    setLocError("")
-
-    if (!navigator.geolocation) {
-      setLocError("geolocation not supported on this device")
-      setLocating(false)
-      return
-    }
-
+    setLocating(true); setLocError("")
+    if(!navigator.geolocation){ setLocError("Geolocation not supported"); setLocating(false); return }
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        })
-        setLocating(false)
-      },
-      () => {
-        setLocError("couldn't get your location 💜 please enable location access")
-        setLocating(false)
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
+      p=>{ setLocation({lat:p.coords.latitude,lng:p.coords.longitude}); setLocating(false) },
+      ()=>{ setLocError("Could not get your location. Please enable location access."); setLocating(false) },
+      {enableHighAccuracy:true,timeout:10000}
     )
   }
 
-  // Clear existing markers from map
-  function clearMarkers() {
-    markersRef.current.forEach((m) => m.setMap(null))
-    markersRef.current = []
-  }
+  function clearMarkers(){ markersRef.current.forEach(m=>m.setMap(null)); markersRef.current=[] }
 
-  // Search for nearby places using Google Places API
-  function searchNearby(category) {
-    if (!serviceRef.current || !location) return
-
-    setSearching(true)
-    setPlaces([])
-    clearMarkers()
-
-    const request = {
-      location: new window.google.maps.LatLng(location.lat, location.lng),
-      radius: 5000, // 5km radius
-      query: category.query,
-    }
-
-    serviceRef.current.textSearch(request, (results, status) => {
+  function searchNearby(cat) {
+    if(!serviceRef.current||!location) return
+    setSearching(true); setPlaces([]); clearMarkers()
+    serviceRef.current.textSearch({ location:new window.google.maps.LatLng(location.lat,location.lng), radius:5000, query:cat.query },(results,status)=>{
       setSearching(false)
-
-      if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-        setPlaces(results.slice(0, 8)) // show top 8
-
-        // Add markers for each result
-        results.slice(0, 8).forEach((place, i) => {
-          const marker = new window.google.maps.Marker({
-            position: place.geometry.location,
-            map: mapObjRef.current,
-            title: place.name,
-            label: {
-              text: String(i + 1),
-              color: "white",
-              fontWeight: "bold",
-              fontSize: "12px",
-            },
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: 14,
-              fillColor: "#ec4899",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 2,
-            },
-          })
-          markersRef.current.push(marker)
+      if(status===window.google.maps.places.PlacesServiceStatus.OK){
+        setPlaces(results.slice(0,8))
+        results.slice(0,8).forEach((place,i)=>{
+          const m=new window.google.maps.Marker({ position:place.geometry.location, map:mapObjRef.current, title:place.name, label:{text:String(i+1),color:"white",fontWeight:"bold",fontSize:"12px"} })
+          markersRef.current.push(m)
         })
-      } else {
-        setPlaces([])
       }
     })
   }
 
-  function handleCategoryChange(cat) {
-    setCategory(cat)
-    if (location && serviceRef.current) {
-      searchNearby(cat)
-    }
-  }
+  function handleCategory(cat){ setCategory(cat); if(location&&serviceRef.current) searchNearby(cat) }
 
-  // Open Google Maps directions
   function getDirections(place) {
-    const dest = encodeURIComponent(place.name + " " + (place.vicinity || ""))
-    window.open(
-      `https://www.google.com/maps/dir/?api=1&origin=${location.lat},${location.lng}&destination=${dest}`,
-      "_blank"
-    )
+    const dest=encodeURIComponent(place.name+" "+(place.vicinity||""))
+    window.open(`https://www.google.com/maps/dir/?api=1&origin=${location.lat},${location.lng}&destination=${dest}`,"_blank")
   }
 
   return (
     <AppLayout>
-      <div className="p-6 max-w-6xl mx-auto">
+      <div style={{ padding:"40px 48px", maxWidth:1000, margin:"0 auto" }}>
 
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-semibold text-purple-800 mb-1">
-            nearby help 📍
-          </h1>
-          <p className="text-purple-400 text-sm">
-            find police stations, hospitals and ngos close to you 💜
-          </p>
+        <div style={{ marginBottom:36 }}>
+          <h1 style={{ fontSize:30, fontWeight:800, letterSpacing:"-1px", marginBottom:6 }}>Nearby Help</h1>
+          <p style={{ fontSize:14, color:"var(--text-3)" }}>Find police stations, hospitals and NGOs close to you.</p>
         </div>
 
-        {/* Helplines strip */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {helplines.map((h) => (
-            <a key={h.number} href={`tel:${h.number}`}
-              className="flex items-center gap-2 p-3 rounded-xl bg-white border border-purple-100 hover:bg-purple-50 transition-all">
-              <span className="text-xl">{h.icon}</span>
+        {/* Helplines */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:24 }}>
+          {helplines.map(h=>(
+            <a key={h.number} href={`tel:${h.number}`} style={{ display:"flex", alignItems:"center", gap:12, padding:"16px 18px", borderRadius:14, background:h.color, textDecoration:"none", transition:"all 0.15s" }}
+              onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
+              onMouseLeave={e=>e.currentTarget.style.transform=""}>
+              <Phone size={16} color={h.tc}/>
               <div>
-                <p className="text-sm font-bold text-purple-700">{h.number}</p>
-                <p className="text-xs text-purple-400">{h.name}</p>
+                <p style={{ fontSize:18, fontWeight:800, color:h.tc, letterSpacing:"-0.5px" }}>{h.number}</p>
+                <p style={{ fontSize:11, color:h.tc, opacity:0.7 }}>{h.name}</p>
               </div>
             </a>
           ))}
         </div>
 
-        {/* Location button */}
-        {!location && (
-          <div className="bg-white rounded-2xl border border-purple-100 p-8 text-center mb-6">
-            <p className="text-4xl mb-3">📍</p>
-            <h2 className="text-base font-semibold text-purple-700 mb-2">
-              enable location to find nearby help
-            </h2>
-            <p className="text-sm text-purple-400 mb-6">
-              we need your location to show places near you
+        {/* Location */}
+        {!location ? (
+          <div className="card" style={{ padding:48, textAlign:"center" }}>
+            <div style={{ width:64, height:64, borderRadius:20, background:"var(--purple-light)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>
+              <MapPin size={28} color="var(--purple)"/>
+            </div>
+            <h2 style={{ fontSize:18, fontWeight:800, color:"var(--text-1)", marginBottom:8 }}>Enable Location</h2>
+            <p style={{ fontSize:14, color:"var(--text-3)", marginBottom:24, maxWidth:320, margin:"0 auto 24px" }}>
+              We need your location to show nearby help options.
             </p>
-            <button
-              onClick={getLocation}
-              disabled={locating}
-              className="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-60"
-              style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-              {locating ? "getting location... 📍" : "share my location 📍"}
+            <button onClick={getLocation} disabled={locating} className="btn btn-purple">
+              <Navigation size={16}/> {locating ? "Getting Location..." : "Share My Location"}
             </button>
-            {locError && (
-              <p className="text-sm text-pink-500 mt-3">{locError}</p>
-            )}
+            {locError && <p style={{ fontSize:13, color:"var(--red)", marginTop:16 }}>{locError}</p>}
           </div>
-        )}
-
-        {/* Map + Results */}
-        {location && (
+        ) : (
           <>
-           {/* No Maps Key fallback */}
-{!MAPS_KEY ? (
-  <div className="mb-6 space-y-4">
+            {/* Location confirmed */}
+            <div style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 18px", borderRadius:12, background:"var(--green-light)", border:"1px solid #a7f3d0", marginBottom:20 }}>
+              <MapPin size={16} color="var(--green)"/>
+              <p style={{ fontSize:13, fontWeight:600, color:"#065f46" }}>
+                Location detected: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+              </p>
+            </div>
 
-    {/* Location confirmed */}
-    <div className="bg-purple-50 rounded-2xl border border-purple-100 p-4 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-lg flex-shrink-0">
-        📍
-      </div>
-      <div>
-        <p className="text-sm font-medium text-purple-700">
-          location detected 💜
-        </p>
-        <p className="text-xs text-purple-400">
-          {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
-        </p>
-      </div>
-    </div>
-
-    {/* One button per category */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {categories.map((cat) => (
-        <a
-          key={cat.key}
-          href={`https://www.google.com/maps/search/${encodeURIComponent(
-            cat.query
-          )}/@${location.lat},${location.lng},14z`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 p-4 rounded-2xl border transition-all hover:scale-105"
-          style={{
-            background: cat.color,
-            borderColor: cat.border,
-          }}
-        >
-          <span className="text-2xl">{cat.icon}</span>
-
-          <div>
-            <p
-              className="text-sm font-semibold"
-              style={{ color: cat.text }}
-            >
-              find {cat.label}
-            </p>
-
-            <p
-              className="text-xs"
-              style={{
-                color: cat.text,
-                opacity: 0.7,
-              }}
-            >
-              opens google maps nearby
-            </p>
-          </div>
-
-          <span
-            className="ml-auto text-lg"
-            style={{ color: cat.text }}
-          >
-            →
-          </span>
-        </a>
-      ))}
-    </div>
-
-    {/* Directions from current location */}
-    <div className="bg-white rounded-2xl border border-purple-100 p-4 text-center">
-      <p className="text-xs text-purple-400 mb-3">
-        or search everything around you at once
-      </p>
-
-      <a
-        href={`https://www.google.com/maps/@${location.lat},${location.lng},15z`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-all hover:opacity-90"
-        style={{
-          background:
-            "linear-gradient(135deg, #a855f7, #ec4899)",
-        }}
-      >
-        🗺️ open my location in google maps
-      </a>
-    </div>
-
-  </div>
-) : (
-              /* Google Map */
-              <div
-                ref={mapRef}
-                className="w-full rounded-2xl border border-purple-100 mb-6"
-                style={{ height: "350px" }}
-              />
+            {/* Map or fallback */}
+            {MAPS_KEY ? (
+              <div ref={mapRef} style={{ width:"100%", height:320, borderRadius:20, border:"1px solid var(--border)", marginBottom:20, overflow:"hidden" }}/>
+            ) : (
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:20 }}>
+                {categories.map(cat=>(
+                  <a key={cat.key} href={`https://www.google.com/maps/search/${encodeURIComponent(cat.query)}/@${location.lat},${location.lng},14z`} target="_blank" rel="noopener noreferrer"
+                    style={{ display:"flex", alignItems:"center", gap:14, padding:"20px", borderRadius:16, background:cat.color, textDecoration:"none", transition:"all 0.15s", border:"1px solid transparent" }}
+                    onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="var(--shadow-sm)" }}
+                    onMouseLeave={e=>{ e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow="" }}>
+                    <span style={{ fontSize:24 }}>{cat.icon}</span>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontSize:14, fontWeight:700, color:cat.tc, marginBottom:2 }}>Find {cat.label}</p>
+                      <p style={{ fontSize:12, color:cat.tc, opacity:0.7 }}>Opens Google Maps nearby</p>
+                    </div>
+                    <Navigation size={16} color={cat.tc}/>
+                  </a>
+                ))}
+              </div>
             )}
 
             {/* Category tabs */}
-            <div className="flex flex-wrap gap-2 mb-5">
-              {categories.map((cat) => (
-                <button key={cat.key}
-                  onClick={() => handleCategoryChange(cat)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border transition-all ${
-                    activeCategory.key === cat.key
-                      ? "text-white border-transparent"
-                      : "text-purple-400 border-purple-100 bg-white hover:border-purple-300"
-                  }`}
-                  style={activeCategory.key === cat.key
-                    ? { background: "linear-gradient(135deg, #a855f7, #ec4899)" }
-                    : {}}>
+            <div style={{ display:"flex", gap:8, marginBottom:20 }}>
+              {categories.map(cat=>(
+                <button key={cat.key} onClick={()=>handleCategory(cat)} style={{
+                  padding:"8px 18px", borderRadius:100, fontSize:13, fontWeight:600,
+                  border:"1.5px solid", cursor:"pointer", transition:"all 0.15s",
+                  background: activeCategory.key===cat.key ? "var(--black)" : "var(--white)",
+                  color: activeCategory.key===cat.key ? "white" : "var(--text-2)",
+                  borderColor: activeCategory.key===cat.key ? "var(--black)" : "var(--border)",
+                }}>
                   {cat.icon} {cat.label}
                 </button>
               ))}
             </div>
 
-            {/* Results list */}
+            {/* Results */}
             {MAPS_KEY && (
-              <div className="bg-white rounded-2xl border border-purple-100 p-5">
-                <h2 className="text-sm font-semibold text-purple-700 mb-4">
-                  {activeCategory.icon} nearby {activeCategory.label}
+              <div className="card" style={{ padding:24 }}>
+                <h2 style={{ fontSize:15, fontWeight:700, color:"var(--text-1)", marginBottom:16 }}>
+                  Nearby {activeCategory.label}
                 </h2>
-
                 {searching ? (
-                  <div className="space-y-3">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-16 bg-purple-50 rounded-xl animate-pulse" />
-                    ))}
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    {[...Array(4)].map((_,i)=><div key={i} style={{ height:64, borderRadius:12, background:"var(--border)", opacity:0.4 }}/>)}
                   </div>
-                ) : places.length === 0 ? (
-                  <p className="text-sm text-purple-400 text-center py-6">
-                    no results found nearby 💜
-                  </p>
+                ) : places.length===0 ? (
+                  <p style={{ fontSize:14, color:"var(--text-3)", textAlign:"center", padding:"32px 0" }}>No results found nearby</p>
                 ) : (
-                  <div className="space-y-3">
-                    {places.map((place, i) => (
-                      <div key={place.place_id}
-                        className="flex items-center justify-between p-3 rounded-xl border border-purple-100 hover:bg-purple-50 transition-all">
-                        <div className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                            style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-                            {i + 1}
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {places.map((place,i)=>(
+                      <div key={place.place_id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 16px", borderRadius:12, border:"1px solid var(--border)", background:"var(--white)" }}>
+                        <div style={{ display:"flex", gap:12, alignItems:"center" }}>
+                          <div style={{ width:28, height:28, borderRadius:8, background:"var(--black)", color:"white", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800, flexShrink:0 }}>
+                            {i+1}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-purple-800">
-                              {place.name}
-                            </p>
-                            <p className="text-xs text-purple-400">
-                              {place.vicinity || place.formatted_address}
-                            </p>
-                            {place.rating && (
-                              <p className="text-xs text-amber-500">
-                                ⭐ {place.rating}
-                              </p>
-                            )}
+                            <p style={{ fontSize:14, fontWeight:600, color:"var(--text-1)" }}>{place.name}</p>
+                            <p style={{ fontSize:12, color:"var(--text-3)" }}>{place.vicinity||place.formatted_address}</p>
+                            {place.rating && <p style={{ fontSize:11, color:"#d97706", marginTop:2 }}>★ {place.rating}</p>}
                           </div>
                         </div>
-                        <button
-                          onClick={() => getDirections(place)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-medium text-purple-600 border border-purple-200 hover:bg-purple-100 transition-all flex-shrink-0">
-                          directions 🗺️
+                        <button onClick={()=>getDirections(place)} className="btn btn-outline btn-sm" style={{ flexShrink:0 }}>
+                          <Navigation size={13}/> Directions
                         </button>
                       </div>
                     ))}
@@ -439,10 +204,7 @@ function NearbyHelp() {
             )}
           </>
         )}
-
       </div>
     </AppLayout>
   )
 }
-
-export default NearbyHelp

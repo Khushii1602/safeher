@@ -2,383 +2,212 @@ import { useState, useEffect } from "react"
 import AppLayout from "@/components/layout/AppLayout"
 import { useAuth } from "@/context/AuthContext"
 import { postAPI } from "@/lib/api"
+import { Heart, MessageCircle, Trash2, Send, ChevronDown, ChevronUp } from "lucide-react"
 
-const categories = [
-  "all",
-  "seeking support",
-  "sharing my story",
-  "legal question",
-  "safety tip",
-  "mental health",
-  "celebrating wins",
-  "general",
-]
+const categories = ["all","seeking support","sharing my story","legal question","safety tip","mental health","celebrating wins","general"]
 
-const categoryColors = {
-  "seeking support":   { bg: "#fce7f3", text: "#be185d", border: "#fbcfe8" },
-  "sharing my story":  { bg: "#f5f3ff", text: "#6d28d9", border: "#ddd6fe" },
-  "legal question":    { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
-  "safety tip":        { bg: "#fef9c3", text: "#854d0e", border: "#fef08a" },
-  "mental health":     { bg: "#fdf4ff", text: "#7e22ce", border: "#e9d5ff" },
-  "celebrating wins":  { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0" },
-  "general":           { bg: "#f9fafb", text: "#374151", border: "#e5e7eb" },
+const catColors = {
+  "seeking support":   { bg:"#fef2f2", text:"#991b1b" },
+  "sharing my story":  { bg:"#f5f3ff", text:"#5b21b6" },
+  "legal question":    { bg:"#eff6ff", text:"#1e40af" },
+  "safety tip":        { bg:"#fefce8", text:"#713f12" },
+  "mental health":     { bg:"#fdf4ff", text:"#6b21a8" },
+  "celebrating wins":  { bg:"#f0fdf4", text:"#14532d" },
+  "general":           { bg:"#f9fafb", text:"#374151" },
 }
 
 function timeAgo(iso) {
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins  = Math.floor(diff / 60000)
-  const hours = Math.floor(mins / 60)
-  const days  = Math.floor(hours / 24)
-  if (mins < 1)   return "just now"
-  if (mins < 60)  return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  return `${days}d ago`
+  const d=Date.now()-new Date(iso).getTime(), m=Math.floor(d/60000), h=Math.floor(m/60), day=Math.floor(h/24)
+  if(m<1) return "just now"
+  if(m<60) return `${m}m ago`
+  if(h<24) return `${h}h ago`
+  return `${day}d ago`
 }
 
-// Comment section
-function CommentSection({ postId, comments, currentUserId }) {
-  const [list, setList]     = useState(comments)
-  const [text, setText]     = useState("")
-  const [posting, setPost]  = useState(false)
+function CommentSection({ postId, comments, userId }) {
+  const [list, setList]   = useState(comments)
+  const [text, setText]   = useState("")
+  const [posting, setP]   = useState(false)
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!text.trim()) return
-    setPost(true)
-    try {
-      const res = await postAPI.comment(postId, {
-        userId: currentUserId,
-        content: text.trim(),
-      })
-      setList((prev) => [...prev, res.data])
-      setText("")
-    } catch { /* silent */ }
-    setPost(false)
+  async function submit(e) {
+    e.preventDefault(); if(!text.trim()) return; setP(true)
+    try { const r=await postAPI.comment(postId,{userId,content:text.trim()}); setList(p=>[...p,r.data]); setText("") } catch {}
+    setP(false)
   }
 
   return (
-    <div className="mt-4 pt-4 border-t border-purple-50">
-      {/* Comments list */}
-      {list.length > 0 && (
-        <div className="space-y-3 mb-4">
-          {list.map((c) => (
-            <div key={c._id} className="flex gap-2">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white flex-shrink-0 mt-0.5"
-                style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-                {c.anonName?.[0]?.toUpperCase()}
-              </div>
-              <div className="flex-1 bg-purple-50 rounded-xl px-3 py-2">
-                <p className="text-xs font-medium text-purple-600 mb-0.5">
-                  {c.anonName}
-                </p>
-                <p className="text-xs text-purple-700 leading-relaxed">
-                  {c.content}
-                </p>
-              </div>
-            </div>
-          ))}
+    <div style={{ marginTop:16, paddingTop:16, borderTop:"1px solid var(--border)" }}>
+      {list.map(c=>(
+        <div key={c._id} style={{ display:"flex", gap:10, marginBottom:12 }}>
+          <div style={{ width:28, height:28, borderRadius:"50%", background:"var(--bg-muted)", border:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:"var(--text-2)", flexShrink:0 }}>
+            {c.anonName?.[0]?.toUpperCase()}
+          </div>
+          <div style={{ flex:1, background:"var(--bg-muted)", borderRadius:12, padding:"10px 14px" }}>
+            <p style={{ fontSize:11, fontWeight:700, color:"var(--text-2)", marginBottom:4 }}>{c.anonName}</p>
+            <p style={{ fontSize:13, color:"var(--text-1)", lineHeight:1.6 }}>{c.content}</p>
+          </div>
         </div>
-      )}
-
-      {/* Add comment */}
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="add a supportive comment... 💜"
-          className="flex-1 px-3 py-2 rounded-xl text-xs border-2 border-purple-100 bg-purple-50 focus:outline-none focus:border-purple-400 focus:bg-white transition-all placeholder:text-purple-200 text-purple-800"
-        />
-        <button type="submit" disabled={posting || !text.trim()}
-          className="px-3 py-2 rounded-xl text-xs font-medium text-white disabled:opacity-40"
-          style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-          {posting ? "..." : "send"}
+      ))}
+      <form onSubmit={submit} style={{ display:"flex", gap:8 }}>
+        <input type="text" value={text} onChange={e=>setText(e.target.value)} placeholder="Add a supportive comment..." className="input" style={{ fontSize:13 }}/>
+        <button type="submit" disabled={posting||!text.trim()} className="btn btn-purple btn-sm" style={{ flexShrink:0 }}>
+          <Send size={14}/>
         </button>
       </form>
     </div>
   )
 }
 
-// Single post card
-function PostCard({ post, currentUserId, onDelete }) {
-  const colors   = categoryColors[post.category] || categoryColors["general"]
-  const [likes, setLikes]       = useState(post.likes?.length || 0)
-  const [liked, setLiked]       = useState(post.likes?.includes(currentUserId))
-  const [showComments, setShowC] = useState(false)
-  const isOwner = post.userId === currentUserId
+function PostCard({ post, userId, onDelete }) {
+  const c = catColors[post.category] || catColors["general"]
+  const [likes, setLikes]     = useState(post.likes?.length||0)
+  const [liked, setLiked]     = useState(post.likes?.includes(userId))
+  const [showC, setShowC]     = useState(false)
+  const isOwner = post.userId===userId
 
-  async function handleLike() {
-    try {
-      const res = await postAPI.like(post._id, currentUserId)
-      setLikes(res.likes)
-      setLiked(res.liked)
-    } catch { /* silent */ }
+  async function like() {
+    try { const r=await postAPI.like(post._id,userId); setLikes(r.likes); setLiked(r.liked) } catch {}
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-purple-100 p-5 hover:shadow-md transition-all">
-
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-            style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
+    <div className="card" style={{ padding:24 }}>
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12, marginBottom:14 }}>
+        <div style={{ display:"flex", gap:12 }}>
+          <div style={{ width:36, height:36, borderRadius:"50%", background:"var(--bg-muted)", border:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, color:"var(--text-2)", flexShrink:0 }}>
             {post.anonName?.[0]?.toUpperCase()}
           </div>
           <div>
-            <p className="text-xs font-medium text-purple-700">{post.anonName}</p>
-            <p className="text-xs text-purple-300">{timeAgo(post.createdAt)}</p>
+            <p style={{ fontSize:13, fontWeight:700, color:"var(--text-1)" }}>{post.anonName}</p>
+            <p style={{ fontSize:11, color:"var(--text-3)" }}>{timeAgo(post.createdAt)}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs px-2.5 py-1 rounded-full border"
-            style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}>
-            {post.category}
-          </span>
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <span style={{ padding:"3px 10px", borderRadius:100, fontSize:11, fontWeight:600, background:c.bg, color:c.text }}>{post.category}</span>
           {isOwner && (
-            <button onClick={() => onDelete(post._id)}
-              className="text-xs text-pink-400 hover:text-pink-600 transition-colors">
-              delete
+            <button onClick={()=>onDelete(post._id)} style={{ background:"none", border:"none", cursor:"pointer", color:"var(--text-3)", padding:4 }}
+              onMouseEnter={e=>e.currentTarget.style.color="var(--red)"}
+              onMouseLeave={e=>e.currentTarget.style.color="var(--text-3)"}>
+              <Trash2 size={14}/>
             </button>
           )}
         </div>
       </div>
 
-      {/* Content */}
-      <p className="text-sm text-purple-800 leading-relaxed mb-4">
-        {post.content}
-      </p>
+      <p style={{ fontSize:14, color:"var(--text-1)", lineHeight:1.7, marginBottom:16 }}>{post.content}</p>
 
-      {/* Actions */}
-      <div className="flex items-center gap-4">
-        <button onClick={handleLike}
-          className={`flex items-center gap-1.5 text-xs transition-all ${
-            liked ? "text-pink-500" : "text-purple-400 hover:text-pink-400"
-          }`}>
-          <span>{liked ? "💜" : "🤍"}</span>
-          <span>{likes} {likes === 1 ? "heart" : "hearts"}</span>
+      <div style={{ display:"flex", gap:16 }}>
+        <button onClick={like} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color: liked ? "#dc2626" : "var(--text-3)", transition:"all 0.15s", padding:0 }}>
+          <Heart size={16} fill={liked ? "#dc2626" : "none"} color={liked ? "#dc2626" : "currentColor"}/> {likes}
         </button>
-
-        <button onClick={() => setShowC(!showComments)}
-          className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-600 transition-all">
-          <span>💬</span>
-          <span>
-            {post.comments?.length || 0}{" "}
-            {(post.comments?.length || 0) === 1 ? "comment" : "comments"}
-          </span>
+        <button onClick={()=>setShowC(!showC)} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color:"var(--text-3)", transition:"all 0.15s", padding:0 }}>
+          <MessageCircle size={16}/> {post.comments?.length||0}
+          {showC ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
         </button>
       </div>
 
-      {/* Comments */}
-      {showComments && (
-        <CommentSection
-          postId={post._id}
-          comments={post.comments || []}
-          currentUserId={currentUserId}
-        />
-      )}
+      {showC && <CommentSection postId={post._id} comments={post.comments||[]} userId={userId}/>}
     </div>
   )
 }
 
-// New post form
-function NewPostForm({ currentUserId, onPosted }) {
+function NewPostForm({ userId, onPosted }) {
   const [content, setContent]   = useState("")
   const [category, setCategory] = useState("seeking support")
   const [posting, setPosting]   = useState(false)
   const [error, setError]       = useState("")
+  const left = 1000-content.length
 
-  const remaining = 1000 - content.length
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!content.trim()) return
-    setPosting(true)
-    setError("")
-    try {
-      await postAPI.create({ userId: currentUserId, content: content.trim(), category })
-      setContent("")
-      setCategory("seeking support")
-      onPosted()
-    } catch (err) {
-      setError(err.message)
-    }
+  async function submit(e) {
+    e.preventDefault(); setPosting(true); setError("")
+    try { await postAPI.create({userId,content:content.trim(),category}); setContent(""); onPosted() }
+    catch(err) { setError(err.message) }
     setPosting(false)
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-purple-100 p-6 mb-6">
-      <h2 className="text-sm font-semibold text-purple-700 mb-1">
-        share with the community 💜
-      </h2>
-      <p className="text-xs text-purple-400 mb-4">
-        you are completely anonymous — no one can see who you are
-      </p>
+    <div className="card" style={{ padding:28, marginBottom:24 }}>
+      <h2 style={{ fontSize:15, fontWeight:700, color:"var(--text-1)", marginBottom:4 }}>Share with the Community</h2>
+      <p style={{ fontSize:13, color:"var(--text-3)", marginBottom:20 }}>You are completely anonymous — no one can see who you are.</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={submit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+        <select value={category} onChange={e=>setCategory(e.target.value)} className="input" style={{ fontSize:13 }}>
+          {categories.filter(c=>c!=="all").map(c=><option key={c} value={c}>{c.charAt(0).toUpperCase()+c.slice(1)}</option>)}
+        </select>
         <div>
-          <label className="block text-xs font-medium text-purple-600 mb-1.5">
-            category
-          </label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl text-sm border-2 border-purple-100 bg-purple-50 focus:outline-none focus:border-purple-400 text-purple-800">
-            {categories.filter((c) => c !== "all").map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <textarea value={content} onChange={e=>setContent(e.target.value)} required rows={4} maxLength={1000} placeholder="Share what's on your mind — this is a safe, judgment-free space." className="input" style={{ resize:"none" }}/>
+          <p style={{ fontSize:11, color: left<50 ? "var(--red)" : "var(--text-3)", marginTop:4, textAlign:"right" }}>{left} characters remaining</p>
         </div>
-
-        <div>
-          <label className="block text-xs font-medium text-purple-600 mb-1.5">
-            your message
-          </label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            rows={4}
-            maxLength={1000}
-            placeholder="share what's on your mind — this is a safe, judgment-free space 💜"
-            className="w-full px-4 py-3 rounded-xl text-sm border-2 border-purple-100 bg-purple-50 focus:outline-none focus:border-purple-400 focus:bg-white transition-all resize-none placeholder:text-purple-200 text-purple-800"
-          />
-          <p className={`text-xs mt-1 text-right ${remaining < 50 ? "text-pink-500" : "text-purple-300"}`}>
-            {remaining} characters remaining
-          </p>
-        </div>
-
-        {error && (
-          <p className="text-xs text-pink-500 bg-pink-50 p-3 rounded-xl border border-pink-100">
-            {error}
-          </p>
-        )}
-
-        <button type="submit" disabled={posting || !content.trim()}
-          className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-40"
-          style={{ background: "linear-gradient(135deg, #a855f7, #ec4899)" }}>
-          {posting ? "posting anonymously... 💜" : "post anonymously 💜"}
+        {error && <p style={{ fontSize:13, color:"var(--red)", padding:"10px 14px", background:"#fef2f2", borderRadius:8 }}>{error}</p>}
+        <button type="submit" disabled={posting||!content.trim()} className="btn btn-purple" style={{ alignSelf:"flex-start", opacity: posting||!content.trim() ? 0.5 : 1 }}>
+          {posting ? "Posting..." : "Post Anonymously"}
         </button>
       </form>
     </div>
   )
 }
 
-function Community() {
+export default function Community() {
   const { currentUser } = useAuth()
-
-  const [posts, setPosts]       = useState([])
-  const [loading, setLoading]   = useState(true)
+  const [posts, setPosts]     = useState([])
+  const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState("all")
-  const [error, setError]       = useState("")
+  const [error, setError]     = useState("")
 
-  useEffect(() => { fetchPosts() }, [category])
+  useEffect(()=>{ fetch() },[category])
 
-  async function fetchPosts() {
-    setLoading(true)
-    setError("")
-    try {
-      const params = {}
-      if (category !== "all") params.category = category
-      const res = await postAPI.getAll(params)
-      setPosts(res.data)
-    } catch {
-      setError("couldn't load posts 💜 please try again")
-    }
+  async function fetch() {
+    setLoading(true); setError("")
+    try { const p={}; if(category!=="all") p.category=category; const r=await postAPI.getAll(p); setPosts(r.data) }
+    catch { setError("Could not load posts. Please try again.") }
     setLoading(false)
   }
 
-  async function handleDelete(postId) {
-    if (!confirm("delete this post?")) return
-    try {
-      await postAPI.deletePost(postId, currentUser.uid)
-      setPosts((prev) => prev.filter((p) => p._id !== postId))
-    } catch {
-      setError("couldn't delete post 💜")
-    }
+  async function handleDelete(id) {
+    if(!confirm("Delete this post?")) return
+    try { await postAPI.deletePost(id,currentUser.uid); setPosts(p=>p.filter(p=>p._id!==id)) }
+    catch { setError("Could not delete post.") }
   }
 
   return (
     <AppLayout>
-      <div className="p-8 max-w-3xl mx-auto">
+      <div style={{ padding:"40px 48px", maxWidth:760, margin:"0 auto" }}>
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-purple-800 mb-1">
-            community 💬
-          </h1>
-          <p className="text-purple-400 text-sm">
-            a safe, anonymous space to share, support and connect 💜
-          </p>
+        <div style={{ marginBottom:36 }}>
+          <h1 style={{ fontSize:30, fontWeight:800, letterSpacing:"-1px", marginBottom:6 }}>Community</h1>
+          <p style={{ fontSize:14, color:"var(--text-3)" }}>A safe, anonymous space to share, support and connect.</p>
         </div>
 
-        {/* New post form */}
-        <NewPostForm
-          currentUserId={currentUser?.uid}
-          onPosted={fetchPosts}
-        />
+        <NewPostForm userId={currentUser?.uid} onPosted={fetch}/>
 
-        {/* Category filters */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {categories.map((cat) => (
-            <button key={cat} onClick={() => setCategory(cat)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                category === cat
-                  ? "text-white border-transparent"
-                  : "text-purple-400 border-purple-100 bg-white hover:border-purple-300"
-              }`}
-              style={category === cat
-                ? { background: "linear-gradient(135deg, #a855f7, #ec4899)" }
-                : {}}>
-              {cat}
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:24 }}>
+          {categories.map(c=>(
+            <button key={c} onClick={()=>setCategory(c)} style={{
+              padding:"7px 16px", borderRadius:100, fontSize:12, fontWeight:600,
+              border:"1.5px solid", cursor:"pointer", transition:"all 0.15s",
+              background: category===c ? "var(--black)" : "var(--white)",
+              color: category===c ? "white" : "var(--text-2)",
+              borderColor: category===c ? "var(--black)" : "var(--border)",
+            }}>
+              {c.charAt(0).toUpperCase()+c.slice(1)}
             </button>
           ))}
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="bg-pink-50 text-pink-600 text-sm p-4 rounded-xl mb-6 border border-pink-100">
-            {error}
-          </div>
-        )}
+        {error && <div style={{ background:"#fef2f2", color:"#991b1b", padding:"12px 16px", borderRadius:12, marginBottom:20, fontSize:14 }}>{error}</div>}
 
-        {/* Posts */}
         {loading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-purple-100 p-5 animate-pulse">
-                <div className="flex gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-purple-100" />
-                  <div className="flex-1">
-                    <div className="h-3 bg-purple-100 rounded w-1/4 mb-2" />
-                    <div className="h-3 bg-purple-50 rounded w-1/6" />
-                  </div>
-                </div>
-                <div className="h-16 bg-purple-50 rounded mb-3" />
-                <div className="h-6 bg-purple-50 rounded w-1/3" />
-              </div>
-            ))}
+          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+            {[...Array(3)].map((_,i)=><div key={i} style={{ height:180, borderRadius:16, background:"var(--border)", opacity:0.4 }}/>)}
           </div>
-        ) : posts.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-purple-100">
-            <p className="text-4xl mb-3">💜</p>
-            <p className="text-sm font-medium text-purple-600 mb-1">
-              no posts yet
-            </p>
-            <p className="text-xs text-purple-400">
-              be the first to share something with the community
-            </p>
+        ) : posts.length===0 ? (
+          <div style={{ textAlign:"center", padding:"64px 0", background:"var(--white)", borderRadius:20, border:"1px solid var(--border)" }}>
+            <MessageCircle size={32} color="var(--text-3)" style={{ margin:"0 auto 12px" }}/>
+            <p style={{ fontSize:15, fontWeight:600, color:"var(--text-1)", marginBottom:4 }}>No posts yet</p>
+            <p style={{ fontSize:13, color:"var(--text-3)" }}>Be the first to share something with the community</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {posts.map((post) => (
-              <PostCard
-                key={post._id}
-                post={post}
-                currentUserId={currentUser?.uid}
-                onDelete={handleDelete}
-              />
-            ))}
+          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+            {posts.map(p=><PostCard key={p._id} post={p} userId={currentUser?.uid} onDelete={handleDelete}/>)}
           </div>
         )}
 
@@ -386,5 +215,3 @@ function Community() {
     </AppLayout>
   )
 }
-
-export default Community
