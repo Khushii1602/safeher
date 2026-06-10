@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react"
 import AppLayout from "@/components/layout/AppLayout"
 import { mentorAPI } from "@/lib/api"
-import { Search, MapPin, CheckCircle, Star, X } from "lucide-react"
+import {
+  Search, MapPin, CheckCircle, Star,
+  X, Clock, MessageSquare, Award, Globe
+} from "lucide-react"
 
 const specializations = ["all","legal aid","mental health","career guidance","financial independence","domestic violence support","digital safety","entrepreneurship","education"]
 
@@ -16,48 +19,54 @@ const specColors = {
   "education":                { bg: "#f0f9ff", text: "#075985" },
 }
 
-const availColors = {
-  available:   { bg: "#f0fdf4", text: "#15803d" },
-  busy:        { bg: "#fffbeb", text: "#92400e" },
-  unavailable: { bg: "#f9fafb", text: "#6b7280" },
-}
-
 function RequestModal({ mentor, onClose }) {
   const [msg, setMsg]   = useState("")
   const [sent, setSent] = useState(false)
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 100,
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
-      background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)"
-    }}>
-      <div className="card" style={{ width: "100%", maxWidth: 460, padding: 32 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }}>
+      <div style={{ width: "100%", maxWidth: 480, background: "var(--white)", borderRadius: 24, padding: 36, boxShadow: "var(--shadow-lg)" }}>
         {sent ? (
           <div style={{ textAlign: "center", padding: "16px 0" }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--green-light)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-              <CheckCircle size={28} color="var(--green)" />
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--green-light)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+              <CheckCircle size={32} color="var(--green)" />
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)", marginBottom: 8 }}>Request Sent!</h3>
-            <p style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 24 }}>
-              {mentor.name} will get back to you soon.
+            <h3 style={{ fontSize: 22, fontWeight: 800, color: "var(--text-1)", marginBottom: 8, letterSpacing: "-0.5px" }}>Request Sent</h3>
+            <p style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 28, lineHeight: 1.7 }}>
+              {mentor.name} will review your request and respond within 24 hours.
             </p>
-            <button className="btn btn-purple" onClick={onClose}>Close</button>
+            <button className="btn btn-purple" onClick={onClose} style={{ minWidth: 140 }}>Done</button>
           </div>
         ) : (
           <>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-1)" }}>
-                Request help from {mentor.name}
-              </h3>
-              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 4 }}>
-                <X size={20} />
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+              <div>
+                <h3 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-1)", marginBottom: 4, letterSpacing: "-0.5px" }}>
+                  Book a Session
+                </h3>
+                <p style={{ fontSize: 14, color: "var(--text-3)" }}>with {mentor.name}</p>
+              </div>
+              <button onClick={onClose} style={{ background: "var(--bg-muted)", border: "none", cursor: "pointer", color: "var(--text-2)", padding: 8, borderRadius: 8 }}>
+                <X size={18} />
               </button>
             </div>
-            <textarea
-              value={msg} onChange={e => setMsg(e.target.value)} rows={5}
-              placeholder="Share what you're going through. This is a safe space..."
-              className="input" style={{ resize: "none", marginBottom: 16 }}
+
+            <div style={{ display: "flex", gap: 14, padding: "16px 20px", background: "var(--bg-muted)", borderRadius: 14, marginBottom: 24 }}>
+              <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--purple)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, flexShrink: 0 }}>
+                {mentor.avatar}
+              </div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>{mentor.name}</p>
+                <p style={{ fontSize: 12, color: "var(--text-3)" }}>{mentor.title}</p>
+                <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{mentor.specialization}</p>
+              </div>
+            </div>
+
+            <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={5}
+              placeholder="Describe what you need help with. This is completely confidential..."
+              style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: "1.5px solid var(--border)", fontSize: 14, fontFamily: "inherit", resize: "none", outline: "none", color: "var(--text-1)", marginBottom: 16, transition: "all 0.2s" }}
+              onFocus={e => e.target.style.borderColor = "var(--purple)"}
+              onBlur={e => e.target.style.borderColor = "var(--border)"}
             />
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Cancel</button>
@@ -74,67 +83,97 @@ function RequestModal({ mentor, onClose }) {
 
 function MentorCard({ mentor, onRequest }) {
   const sc = specColors[mentor.specialization] || specColors["legal aid"]
-  const ac = availColors[mentor.availability]
+  const isAvailable = mentor.availability === "available"
 
   return (
-    <div className="card" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", gap: 14 }}>
-        <div style={{
-          width: 48, height: 48, borderRadius: "50%",
-          background: "var(--purple)", color: "white",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 15, fontWeight: 800, flexShrink: 0
-        }}>
-          {mentor.avatar}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 2 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>{mentor.name}</h3>
-            {mentor.isVerified && <CheckCircle size={13} color="var(--green)" />}
+    <div style={{
+      background: "var(--white)", border: "1.5px solid var(--border)",
+      borderRadius: 20, overflow: "hidden", transition: "all 0.2s"
+    }}
+    onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--purple)"; e.currentTarget.style.boxShadow = "var(--shadow-md)"; e.currentTarget.style.transform = "translateY(-2px)" }}
+    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.boxShadow = ""; e.currentTarget.style.transform = "" }}>
+
+      {/* Top bar */}
+      <div style={{ height: 6, background: isAvailable ? "var(--green)" : "#e5e7eb" }} />
+
+      <div style={{ padding: "24px 24px" }}>
+
+        {/* Profile */}
+        <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--purple)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, flexShrink: 0 }}>
+            {mentor.avatar}
           </div>
-          <p style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 4 }}>{mentor.title}</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-3)" }}>
-            <MapPin size={10} /> {mentor.city}, {mentor.state}
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: "var(--text-1)", letterSpacing: "-0.3px" }}>{mentor.name}</h3>
+              {mentor.isVerified && <CheckCircle size={14} color="var(--green)" />}
+            </div>
+            <p style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 6, lineHeight: 1.4 }}>{mentor.title}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-3)" }}>
+              <MapPin size={10} /> {mentor.city}, {mentor.state}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        <span style={{ padding: "3px 10px", borderRadius: 100, fontSize: 11, fontWeight: 600, background: sc.bg, color: sc.text }}>
-          {mentor.specialization}
-        </span>
-        <span style={{ padding: "3px 10px", borderRadius: 100, fontSize: 11, fontWeight: 600, background: ac.bg, color: ac.text }}>
-          {mentor.availability}
-        </span>
-      </div>
-
-      <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.7, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-        {mentor.bio}
-      </p>
-
-      <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--text-3)" }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <Star size={12} fill="#f59e0b" color="#f59e0b" /> {mentor.rating}
-        </span>
-        <span>{mentor.experience} yrs exp</span>
-        <span>{mentor.totalSessions} sessions</span>
-      </div>
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {mentor.languages.map(l => (
-          <span key={l} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 100, background: "var(--bg-muted)", color: "var(--text-2)" }}>
-            {l}
+        {/* Badges */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+          <span style={{ padding: "4px 12px", borderRadius: 100, fontSize: 11, fontWeight: 700, background: sc.bg, color: sc.text }}>
+            {mentor.specialization}
           </span>
-        ))}
-      </div>
+          <span style={{ padding: "4px 12px", borderRadius: 100, fontSize: 11, fontWeight: 700, background: isAvailable ? "#f0fdf4" : "#f9fafb", color: isAvailable ? "#15803d" : "#6b7280" }}>
+            {isAvailable ? "Available" : mentor.availability}
+          </span>
+        </div>
 
-      <button
-        onClick={() => onRequest(mentor)}
-        disabled={mentor.availability === "unavailable"}
-        className="btn btn-purple"
-        style={{ width: "100%", opacity: mentor.availability === "unavailable" ? 0.4 : 1 }}>
-        {mentor.availability === "unavailable" ? "Currently Unavailable" : "Request Help"}
-      </button>
+        {/* Bio */}
+        <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.7, marginBottom: 16, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          {mentor.bio}
+        </p>
+
+        {/* Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, padding: "16px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", marginBottom: 16 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginBottom: 2 }}>
+              <Star size={12} fill="#f59e0b" color="#f59e0b" />
+              <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text-1)" }}>{mentor.rating}</span>
+            </div>
+            <p style={{ fontSize: 10, color: "var(--text-3)", fontWeight: 500 }}>Rating</p>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontSize: 14, fontWeight: 800, color: "var(--text-1)", marginBottom: 2 }}>{mentor.experience}y</p>
+            <p style={{ fontSize: 10, color: "var(--text-3)", fontWeight: 500 }}>Experience</p>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontSize: 14, fontWeight: 800, color: "var(--text-1)", marginBottom: 2 }}>{mentor.totalSessions}</p>
+            <p style={{ fontSize: 10, color: "var(--text-3)", fontWeight: 500 }}>Sessions</p>
+          </div>
+        </div>
+
+        {/* Languages */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+          {mentor.languages.map(l => (
+            <span key={l} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 6, background: "var(--bg-muted)", color: "var(--text-2)", fontWeight: 500 }}>
+              {l}
+            </span>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <button
+          onClick={() => onRequest(mentor)}
+          disabled={!isAvailable}
+          style={{
+            width: "100%", padding: "12px", borderRadius: 12,
+            background: isAvailable ? "var(--purple)" : "var(--bg-muted)",
+            color: isAvailable ? "white" : "var(--text-3)",
+            fontSize: 13, fontWeight: 700, border: "none", cursor: isAvailable ? "pointer" : "not-allowed",
+            transition: "all 0.15s"
+          }}
+          onMouseEnter={e => isAvailable && (e.currentTarget.style.background = "#5b21b6")}
+          onMouseLeave={e => isAvailable && (e.currentTarget.style.background = "var(--purple)")}>
+          {isAvailable ? "Book a Session" : "Currently Unavailable"}
+        </button>
+      </div>
     </div>
   )
 }
@@ -163,56 +202,88 @@ export default function MentorDirectory() {
 
   return (
     <AppLayout>
-      <div style={{ padding: "40px 48px", maxWidth: 1100, margin: "0 auto" }}>
+      <div style={{ padding: "48px 48px", maxWidth: 1200, margin: "0 auto" }}>
 
-        <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-1px", color: "var(--text-1)", marginBottom: 6 }}>
-            Mentor Directory
+        {/* Header */}
+        <div style={{ marginBottom: 40 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+            Expert Network
+          </p>
+          <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-1.5px", color: "var(--text-1)", marginBottom: 10 }}>
+            Trusted Mentors
           </h1>
-          <p style={{ fontSize: 14, color: "var(--text-3)" }}>
-            Connect with verified mentors who genuinely want to help you
+          <p style={{ fontSize: 16, color: "var(--text-3)", maxWidth: 520 }}>
+            Connect with verified professionals offering guidance in legal aid, mental health, career development and more.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
-          <div style={{ flex: 1, position: "relative" }}>
-            <Search size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === "Enter" && fetchMentors(search)} placeholder="Search by name, city or expertise..." className="input" style={{ paddingLeft: 42 }} />
-          </div>
-          <button className="btn btn-purple" onClick={() => fetchMentors(search)}>
-            <Search size={15} /> Search
-          </button>
+        {/* Stats bar */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "var(--border)", borderRadius: 16, overflow: "hidden", marginBottom: 36, border: "1.5px solid var(--border)" }}>
+          {[
+            { icon: Award,         label: "Verified Mentors",   value: "800+" },
+            { icon: Star,          label: "Average Rating",      value: "4.8" },
+            { icon: MessageSquare, label: "Sessions Completed",  value: "10K+" },
+            { icon: Globe,         label: "Languages Spoken",    value: "15+" },
+          ].map(s => {
+            const Icon = s.icon
+            return (
+              <div key={s.label} style={{ background: "var(--white)", padding: "20px 24px", display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--purple-light)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon size={18} color="var(--purple)" />
+                </div>
+                <div>
+                  <p style={{ fontSize: 20, fontWeight: 900, color: "var(--text-1)", letterSpacing: "-0.5px" }}>{s.value}</p>
+                  <p style={{ fontSize: 11, color: "var(--text-3)" }}>{s.label}</p>
+                </div>
+              </div>
+            )
+          })}
         </div>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 32 }}>
+        {/* Search */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+          <div style={{ flex: 1, position: "relative" }}>
+            <Search size={18} style={{ position: "absolute", left: 18, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === "Enter" && fetchMentors(search)} placeholder="Search by name, city or expertise..."
+              style={{ width: "100%", padding: "16px 18px 16px 50px", borderRadius: 14, border: "1.5px solid var(--border)", fontSize: 15, fontFamily: "inherit", background: "var(--white)", color: "var(--text-1)", outline: "none", transition: "all 0.2s" }}
+              onFocus={e => e.target.style.borderColor = "var(--purple)"}
+              onBlur={e => e.target.style.borderColor = "var(--border)"} />
+          </div>
+          <button className="btn btn-purple" onClick={() => fetchMentors(search)} style={{ padding: "0 28px", fontSize: 15 }}>Search</button>
+        </div>
+
+        {/* Specialization tabs */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 36 }}>
           {specializations.map(s => (
             <button key={s} onClick={() => setSpec(s)} style={{
-              padding: "7px 16px", borderRadius: 100, fontSize: 12, fontWeight: 600,
+              padding: "9px 18px", borderRadius: 100, fontSize: 13, fontWeight: 600,
               border: "1.5px solid", cursor: "pointer", transition: "all 0.15s",
-              background: spec === s ? "var(--purple)" : "var(--white)",
+              background: spec === s ? "var(--black)" : "var(--white)",
               color: spec === s ? "white" : "var(--text-2)",
-              borderColor: spec === s ? "var(--purple)" : "var(--border)",
+              borderColor: spec === s ? "var(--black)" : "var(--border)",
             }}>
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
 
-        {error && <div style={{ background: "#fef2f2", color: "#991b1b", padding: "12px 16px", borderRadius: 12, marginBottom: 24, fontSize: 14 }}>{error}</div>}
+        {error && <div style={{ background: "#fef2f2", color: "#991b1b", padding: "14px 18px", borderRadius: 12, marginBottom: 24, fontSize: 14 }}>{error}</div>}
 
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
-            {[...Array(6)].map((_, i) => <div key={i} style={{ height: 320, borderRadius: 16, background: "var(--border)", opacity: 0.4 }} />)}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+            {[...Array(6)].map((_, i) => <div key={i} style={{ height: 420, borderRadius: 20, background: "var(--border)", opacity: 0.3 }} />)}
           </div>
         ) : mentors.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)", marginBottom: 6 }}>No mentors found</p>
+          <div style={{ textAlign: "center", padding: "80px 0", background: "var(--white)", borderRadius: 20, border: "1.5px solid var(--border)" }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)", marginBottom: 8 }}>No mentors found</p>
             <button className="btn btn-outline btn-sm" onClick={() => { setSearch(""); setSpec("all"); fetchMentors("") }}>Clear Filters</button>
           </div>
         ) : (
           <>
-            <p style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 20 }}>Showing {mentors.length} mentor{mentors.length !== 1 ? "s" : ""}</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+            <p style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 24 }}>
+              Showing <strong style={{ color: "var(--text-1)" }}>{mentors.length}</strong> mentor{mentors.length !== 1 ? "s" : ""}
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
               {mentors.map(m => <MentorCard key={m._id} mentor={m} onRequest={setSelected} />)}
             </div>
           </>
