@@ -1,11 +1,9 @@
-// App.jsx - Defines all the routes (URLs) for our application
-// App.jsx - All routes with protection applied
 import { Routes, Route } from "react-router-dom"
 import ProtectedRoute from "@/components/shared/ProtectedRoute"
 
-// Pages
 import Home from "@/pages/Home"
 import Login from "@/pages/Login"
+import Onboarding from "@/pages/Onboarding"
 import Dashboard from "@/pages/Dashboard"
 import NGODirectory from "@/pages/NGODirectory"
 import MentorDirectory from "@/pages/MentorDirectory"
@@ -15,63 +13,36 @@ import NearbyHelp from "@/pages/NearbyHelp"
 import EvidenceVault from "@/pages/EvidenceVault"
 import Community from "@/pages/Community"
 import AIAssistant from "@/pages/AIAssistant"
+import LegalAid from "@/pages/LegalAid"
+import ChildSafety from "@/pages/ChildSafety"
+import PoliceDirectory from "@/pages/PoliceDirectory"
+import ResourceHub from "@/pages/ResourceHub"
+import Profile from "@/pages/Profile"
 import NotFound from "@/pages/NotFound"
-import CompleteProfile from "./pages/CompleteProfile";
 
-function App() {
+const P = ({ children }) => <ProtectedRoute>{children}</ProtectedRoute>
+
+export default function App() {
   return (
     <Routes>
-
-      {/* ── Public routes (anyone can visit) ── */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-
-      {/* ── Protected routes (must be logged in) ── */}
-      {/* Every page wrapped in ProtectedRoute is now secured */}
-
-      <Route path="/dashboard" element={
-        <ProtectedRoute><Dashboard /></ProtectedRoute>
-      } />
-
-      <Route path="/ngos" element={
-        <ProtectedRoute><NGODirectory /></ProtectedRoute>
-      } />
-
-      <Route path="/mentors" element={
-        <ProtectedRoute><MentorDirectory /></ProtectedRoute>
-      } />
-
-      <Route path="/sos" element={
-        <ProtectedRoute><SOS /></ProtectedRoute>
-      } />
-
-      <Route path="/checkin" element={
-        <ProtectedRoute><SafetyCheckin /></ProtectedRoute>
-      } />
-
-      <Route path="/nearby" element={
-        <ProtectedRoute><NearbyHelp /></ProtectedRoute>
-      } />
-
-      <Route path="/vault" element={
-        <ProtectedRoute><EvidenceVault /></ProtectedRoute>
-      } />
-
-      <Route path="/community" element={
-        <ProtectedRoute><Community /></ProtectedRoute>
-      } />
-
-      <Route path="/assistant" element={
-        <ProtectedRoute><AIAssistant /></ProtectedRoute>
-      } />
-
-      {/* 404 catch-all */}
-      <Route path="*" element={<NotFound />} />
-
-      <Route path="/complete-profile" element={<CompleteProfile />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/"            element={<Home />} />
+      <Route path="/login"       element={<Login />} />
+      <Route path="/onboarding"  element={<P><Onboarding /></P>} />
+      <Route path="/dashboard"   element={<P><Dashboard /></P>} />
+      <Route path="/ngos"        element={<P><NGODirectory /></P>} />
+      <Route path="/mentors"     element={<P><MentorDirectory /></P>} />
+      <Route path="/sos"         element={<P><SOS /></P>} />
+      <Route path="/checkin"     element={<P><SafetyCheckin /></P>} />
+      <Route path="/nearby"      element={<P><NearbyHelp /></P>} />
+      <Route path="/vault"       element={<P><EvidenceVault /></P>} />
+      <Route path="/community"   element={<P><Community /></P>} />
+      <Route path="/assistant"   element={<P><AIAssistant /></P>} />
+      <Route path="/legal-aid"   element={<P><LegalAid /></P>} />
+      <Route path="/child-safety"element={<P><ChildSafety /></P>} />
+      <Route path="/police"      element={<P><PoliceDirectory /></P>} />
+      <Route path="/resources"   element={<P><ResourceHub /></P>} />
+      <Route path="/profile"     element={<P><Profile /></P>} />
+      <Route path="*"            element={<NotFound />} />
     </Routes>
   )
 }
-
-export default App

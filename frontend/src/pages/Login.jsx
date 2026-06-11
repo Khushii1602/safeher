@@ -1,3 +1,4 @@
+const [showForgot, setShowForgot] = useState(false)
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
@@ -24,7 +25,63 @@ function getStrength(rules) {
   if(n===3) return {score:3,label:"Good",color:"#6d28d9"}
   return {score:4,label:"Strong",color:"#059669"}
 }
+import { sendPasswordResetEmail } from "firebase/auth"
 
+function ForgotPassword({ onClose }) {
+  const [email, setEmail]   = useState("")
+  const [sent, setSent]     = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError]   = useState("")
+
+  async function handleReset(e) {
+    e.preventDefault()
+    setLoading(true); setError("")
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setSent(true)
+    } catch (err) {
+      setError("Could not send reset email. Please check the address.")
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }}>
+      <div style={{ width: "100%", maxWidth: 400, background: "var(--white)", borderRadius: 24, padding: 36, boxShadow: "var(--shadow-lg)" }}>
+        {sent ? (
+          <div style={{ textAlign: "center" }}>
+            <CheckCircle size={48} color="var(--green)" style={{ margin: "0 auto 16px" }} />
+            <h3 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-1)", marginBottom: 8, letterSpacing: "-0.5px" }}>Reset Link Sent</h3>
+            <p style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 24, lineHeight: 1.7 }}>
+              Check your email for a password reset link. It may take a few minutes to arrive.
+            </p>
+            <button onClick={onClose} className="btn btn-purple" style={{ minWidth: 140 }}>Done</button>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
+              <h3 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-1)", letterSpacing: "-0.5px" }}>Reset Password</h3>
+              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)" }}>
+                <X size={20} />
+              </button>
+            </div>
+            <p style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 24 }}>
+              Enter your email and we'll send you a link to reset your password.
+            </p>
+            {error && <p style={{ fontSize: 13, color: "var(--red)", background: "#fef2f2", padding: "10px 14px", borderRadius: 8, marginBottom: 16 }}>{error}</p>}
+            <form onSubmit={handleReset} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com"
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, fontFamily: "inherit", outline: "none", color: "var(--text-1)" }} />
+              <button type="submit" disabled={loading} className="btn btn-purple" style={{ width: "100%" }}>
+                {loading ? "Sending..." : "Send Reset Link"}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 export default function Login() {
   const [isSignup, setIsSignup]   = useState(false)
   const [email, setEmail]         = useState("")
@@ -47,7 +104,8 @@ export default function Login() {
     try {
       if(isSignup) await createUserWithEmailAndPassword(auth,email,password)
       else await signInWithEmailAndPassword(auth,email,password)
-      navigate("/dashboard")
+      navigate("/onboarding")
+
     } catch(err) {
       const msgs = {
         "auth/email-already-in-use":"This email is already registered. Try signing in.",
@@ -256,12 +314,23 @@ export default function Login() {
           </form>
 
           <p style={{ textAlign:"center", fontSize:13, color:"var(--text-3)", marginTop:24 }}>
+            {/* Forgot password */}
+           {!isSignup && (
+             <div style={{ textAlign: "right", marginTop: -8 }}>
+                <button type="button" onClick={() => setShowForgot(true)} style={{ background: "none", border: "none", fontSize: 13, color: "var(--purple)", cursor: "pointer", fontFamily: "inherit" }}>
+                   Forgot password?
+                </button>
+               </div>
+)}
             {isSignup ? "Already have an account?" : "Don't have an account?"}
             <button onClick={()=>{ setIsSignup(!isSignup); setError("") }} style={{ background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:700, color:"var(--purple)", marginLeft:6 }}>
               {isSignup ? "Sign In" : "Sign Up"}
             </button>
           </p>
-
+         {/* Forgot Password Modal */}
+           {showForgot && (
+             <ForgotPassword onClose={() => setShowForgot(false)} />
+)}
         </div>
       </div>
     </div>

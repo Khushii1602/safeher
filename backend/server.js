@@ -11,7 +11,10 @@ import ngoRoutes from "./routes/ngoRoutes.js"
 import emergencyContactRoutes from "./routes/emergencyContactRoutes.js"
 import chatRoutes from "./routes/chatRoutes.js"
 import mentorRoutes from "./routes/mentorRoutes.js"
-
+import legalAidRoutes from "./routes/legalAidRoutes.js"
+import childSafetyRoutes from "./routes/childSafetyRoutes.js"
+import policeRoutes from "./routes/policeRoutes.js"
+import userProfileRoutes from "./routes/userProfileRoutes.js"
 
 connectDB()
 const app = express()
@@ -30,6 +33,10 @@ app.use(cors({
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ limit: "10mb", extended: true }))
 app.use(morgan("dev"))
+app.use("/api/legal-aid", legalAidRoutes)
+app.use("/api/child-safety", childSafetyRoutes)
+app.use("/api/police", policeRoutes)
+app.use("/api/profile", userProfileRoutes)
 
 app.get("/api/health", (req, res) => {
   res.json({

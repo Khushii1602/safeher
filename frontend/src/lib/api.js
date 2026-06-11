@@ -97,3 +97,33 @@ export const postAPI = {
   comment:    (id, data)   => apiFetch(`/posts/${id}/comments`, { method: "POST", body: JSON.stringify(data) }),
   deletePost: (id, userId) => apiFetch(`/posts/${id}`, { method: "DELETE", body: JSON.stringify({ userId }) }),
 }
+
+// ── Legal Aid API ──
+export const legalAidAPI = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return apiFetch(`/legal-aid${query ? `?${query}` : ""}`)
+  },
+}
+
+// ── Child Safety API ──
+export const childSafetyAPI = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return apiFetch(`/child-safety${query ? `?${query}` : ""}`)
+  },
+}
+
+// ── Police Directory API ──
+export const policeAPI = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return apiFetch(`/police${query ? `?${query}` : ""}`)
+  },
+}
+
+// ── User Profile API ──
+export const profileAPI = {
+  get:    (uid)  => apiFetch(`/profile/${uid}`),
+  upsert: (data) => apiFetch("/profile", { method: "POST", body: JSON.stringify(data) }),
+}
