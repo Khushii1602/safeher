@@ -1,9 +1,8 @@
-const [showForgot, setShowForgot] = useState(false)
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
 import { auth, googleProvider } from "@/lib/firebase"
-import { Shield, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react"
+import { Shield, Eye, EyeOff, CheckCircle, AlertCircle, X } from "lucide-react"
 
 function generateSuggestions() {
   const adj  = ["Violet","Rose","Lotus","Pearl","Luna","Aurora","Crystal","Amber"]
@@ -93,6 +92,7 @@ export default function Login() {
   const [copiedIdx, setCopied]    = useState(null)
   const navigate = useNavigate()
   const rules    = checkRules(password)
+  const [showForgot, setShowForgot] = useState(false)
   const strength = getStrength(rules)
 
   function applySuggestion(s,i) { setPassword(s); setCopied(i); setTimeout(()=>setCopied(null),1500) }
@@ -313,20 +313,46 @@ export default function Login() {
             </button>
           </form>
 
-          <p style={{ textAlign:"center", fontSize:13, color:"var(--text-3)", marginTop:24 }}>
-            {/* Forgot password */}
-           {!isSignup && (
-             <div style={{ textAlign: "right", marginTop: -8 }}>
-                <button type="button" onClick={() => setShowForgot(true)} style={{ background: "none", border: "none", fontSize: 13, color: "var(--purple)", cursor: "pointer", fontFamily: "inherit" }}>
-                   Forgot password?
-                </button>
-               </div>
+        {/* Forgot password */}
+{!isSignup && (
+  <div style={{ textAlign: "right", marginTop: 12 }}>
+    <button
+      type="button"
+      onClick={() => setShowForgot(true)}
+      style={{
+        background: "none",
+        border: "none",
+        fontSize: 13,
+        color: "var(--purple)",
+        cursor: "pointer",
+        fontFamily: "inherit"
+      }}
+    >
+      Forgot password?
+    </button>
+  </div>
 )}
-            {isSignup ? "Already have an account?" : "Don't have an account?"}
-            <button onClick={()=>{ setIsSignup(!isSignup); setError("") }} style={{ background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:700, color:"var(--purple)", marginLeft:6 }}>
-              {isSignup ? "Sign In" : "Sign Up"}
-            </button>
-          </p>
+
+<p style={{ textAlign:"center", fontSize:13, color:"var(--text-3)", marginTop:24 }}>
+  {isSignup ? "Already have an account?" : "Don't have an account?"}
+  <button
+    onClick={() => {
+      setIsSignup(!isSignup)
+      setError("")
+    }}
+    style={{
+      background:"none",
+      border:"none",
+      cursor:"pointer",
+      fontSize:13,
+      fontWeight:700,
+      color:"var(--purple)",
+      marginLeft:6
+    }}
+  >
+    {isSignup ? "Sign In" : "Sign Up"}
+  </button>
+</p>
          {/* Forgot Password Modal */}
            {showForgot && (
              <ForgotPassword onClose={() => setShowForgot(false)} />
