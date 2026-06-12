@@ -130,11 +130,16 @@ export default function Login() {
     <div style={{ minHeight:"100vh", display:"flex", background:"var(--bg)" }}>
 
       {/* Left panel */}
-      <div style={{
-        display:"none", width:"45%", background:"var(--black)",
-        padding:"48px", flexDirection:"column", justifyContent:"space-between",
-        position:"relative", overflow:"hidden"
-      }} className="lg-flex">
+<div style={{
+  width: "45%",
+  background: "var(--black)",
+  padding: "48px",
+  flexDirection: "column",
+  justifyContent: "space-between",
+  position: "relative",
+  overflow: "hidden"
+}} className="login-left-panel">
+        
 
         {/* Background pattern */}
         <div style={{ position:"absolute", inset:0, opacity:0.03, backgroundImage:"radial-gradient(circle at 2px 2px, white 1px, transparent 0)", backgroundSize:"32px 32px" }} />
@@ -359,6 +364,12 @@ export default function Login() {
 )}
         </div>
       </div>
+      <style>{`
+  .login-left-panel { display: none; }
+  @media (min-width: 900px) {
+    .login-left-panel { display: flex !important; }
+  }
+`}</style>
     </div>
   )
 }

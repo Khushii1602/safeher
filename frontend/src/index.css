@@ -124,3 +124,32 @@ body {
 
 /* Focus */
 :focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+/* ── Mobile Responsive Utilities ── */
+
+@media (max-width: 768px) {
+
+  /* Section padding */
+  .section, .section-sm {
+    padding: 24px 16px !important;
+  }
+
+  /* Typography */
+  .t-display { font-size: 2rem !important; }
+  .t-h1      { font-size: 1.6rem !important; }
+
+  /* Buttons */
+  .btn-lg { padding: 13px 22px !important; font-size: 14px !important; }
+}
+
+/* Prevent horizontal scroll globally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Touch-friendly tap targets */
+@media (hover: none) {
+  button, a {
+    min-height: 44px;
+  }
+}

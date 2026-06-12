@@ -37,8 +37,8 @@ export default function Home() {
       <Navbar />
 
       {/* Hero */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "96px 48px 80px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "clamp(40px, 8vw, 96px) clamp(16px, 4vw, 48px)" }}>
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "clamp(32px, 6vw, 80px)", alignItems: "center" }}>
 
           {/* Left */}
           <div className="anim-fade-up">
@@ -174,7 +174,7 @@ export default function Home() {
       </div>
 
       {/* Features */}
-      <section id="features" style={{ maxWidth: 1200, margin: "0 auto", padding: "96px 48px" }}>
+      <section id="features" style={{ maxWidth: 1200, margin: "0 auto", padding: "clamp(40px, 8vw, 96px) clamp(16px, 4vw, 48px)" }}>
         <div style={{ marginBottom: 56 }}>
           <p className="t-label" style={{ marginBottom: 12 }}>Everything You Need</p>
           <h2 className="t-h1" style={{ marginBottom: 16 }}>Built for real emergencies</h2>
@@ -184,7 +184,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
           {features.map(f => {
             const Icon = f.icon
             return (
@@ -211,7 +211,7 @@ export default function Home() {
 
       {/* How it works */}
       <div style={{ background: "var(--black)" }}>
-        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "96px 48px" }}>
+        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "clamp(40px, 8vw, 96px) clamp(16px, 4vw, 48px)" }}>
           <div style={{ marginBottom: 56 }}>
             <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9b9b9b", marginBottom: 12 }}>
               Simple Process
@@ -222,7 +222,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 40 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 40 }}>
             {steps.map((s, i) => (
               <div key={s.n} style={{ position: "relative" }}>
                 {i < steps.length - 1 && (
@@ -253,13 +253,13 @@ export default function Home() {
       </div>
 
       {/* Testimonials */}
-      <section id="ourimpact" style={{ maxWidth: 1200, margin: "0 auto", padding: "96px 48px" }}>
+      <section id="ourimpact" style={{ maxWidth: 1200, margin: "0 auto", padding: "clamp(40px, 8vw, 96px) clamp(16px, 4vw, 48px)" }}>
         <div style={{ marginBottom: 56 }}>
           <p className="t-label" style={{ marginBottom: 12 }}>Stories That Matter</p>
           <h2 className="t-h1">Real women, real impact</h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 20 }}>
           {testimonials.map(t => (
             <div key={t.name} className="card" style={{ padding: 28 }}>
               <div style={{ display: "flex", gap: 3, marginBottom: 20 }}>

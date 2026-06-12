@@ -38,7 +38,7 @@ export default function Navbar() {
         </button>
 
         {/* Desktop links */}
-        <nav style={{ display: "flex", gap: 36 }} className="hidden md:flex">
+        <nav style={{ display: "flex", gap: 36 }} className="nav-desktop">
           {["Features", "Our Impact", "Community", "About"].map((l) => (
             <a key={l} href={`#${l.toLowerCase().replace(" ", "")}`} style={{
               fontSize: 14, fontWeight: 500,
@@ -68,13 +68,14 @@ export default function Navbar() {
               </button>
             </>
           )}
-          <button
+        <button
             onClick={() => setOpen(!open)}
-            style={{ background: "none", border: "none", cursor: "pointer", display: "none", padding: 8 }}
-            className="md-hidden"
-            aria-label="Menu">
-            {open ? <X size={20} /> : <Menu size={20} />}
-          </button>
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center" }}
+             className="nav-mobile-btn"
+             aria-label="Menu">
+               {open ? <X size={20} /> : <Menu size={20} />}
+        </button>
+          
         </div>
       </div>
 
@@ -98,6 +99,15 @@ export default function Navbar() {
           </div>
         </div>
       )}
+      <style>{`
+  @media (max-width: 768px) {
+    .nav-desktop { display: none !important; }
+    .nav-mobile-btn { display: flex !important; }
+  }
+  @media (min-width: 769px) {
+    .nav-mobile-btn { display: none !important; }
+  }
+`}</style>
     </header>
   )
 }
