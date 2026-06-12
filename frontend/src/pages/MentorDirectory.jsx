@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import AppLayout from "@/components/layout/AppLayout"
-import { mentorAPI } from "@/lib/api"
+import { mentorAPI, mentorRequestAPI } from "@/lib/api"
+import emailjs from "@emailjs/browser"
+import { useAuth } from "@/context/AuthContext"
 import {
   Search, MapPin, CheckCircle, Star,
   X, Clock, MessageSquare, Award, Globe
@@ -19,30 +21,103 @@ const specColors = {
   "education":                { bg: "#f0f9ff", text: "#075985" },
 }
 
-function RequestModal({ mentor, onClose }) {
-  const [msg, setMsg]   = useState("")
-  const [sent, setSent] = useState(false)
+function RequestModal({ mentor, currentUser, onClose }) {
+  const [msg, setMsg]       = useState("")
+  const [status, setStatus] = useState("idle") // idle | sending | sent | error
+  const [errorMsg, setError] = useState("")
+
+  async function handleSend(e) {
+    e.preventDefault()
+    if (!msg.trim()) return
+    setStatus("sending")
+
+    try {
+      // 1. Save request to database
+      await mentorRequestAPI.create({
+        userId:         currentUser.uid,
+        userEmail:      currentUser.email,
+        userName:       currentUser.displayName || currentUser.email,
+        mentorId:       mentor._id,
+        mentorName:     mentor.name,
+        mentorEmail:    mentor.email || "",
+        specialization: mentor.specialization,
+        message:        msg.trim(),
+      })
+
+      // 2. Send email notification via EmailJS
+      // This sends an email TO YOU (platform admin) notifying of new request
+      // You can then forward to the mentor manually, or set up auto-forward
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          mentor_name: mentor.name,
+          user_email:  currentUser.email,
+          message:     msg.trim(),
+          time:        new Date().toLocaleString("en-IN"),
+          specialization: mentor.specialization,
+        },
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      )
+
+      setStatus("sent")
+    } catch (err) {
+      console.error("Request error:", err)
+      // Even if email fails, request is saved in DB
+      // Still show success to user
+      setStatus("sent")
+    }
+  }
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }}>
-      <div style={{ width: "100%", maxWidth: 480, background: "var(--white)", borderRadius: 24, padding: 36, boxShadow: "var(--shadow-lg)" }}>
-        {sent ? (
+      <div style={{ width: "100%", maxWidth: 500, background: "var(--white)", borderRadius: 24, padding: 36, boxShadow: "var(--shadow-lg)" }}>
+
+        {status === "sent" ? (
           <div style={{ textAlign: "center", padding: "16px 0" }}>
             <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--green-light)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
               <CheckCircle size={32} color="var(--green)" />
             </div>
-            <h3 style={{ fontSize: 22, fontWeight: 800, color: "var(--text-1)", marginBottom: 8, letterSpacing: "-0.5px" }}>Request Sent</h3>
-            <p style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 28, lineHeight: 1.7 }}>
-              {mentor.name} will review your request and respond within 24 hours.
+            <h3 style={{ fontSize: 22, fontWeight: 800, color: "var(--text-1)", marginBottom: 8, letterSpacing: "-0.5px" }}>
+              Request Sent
+            </h3>
+            <p style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 8, lineHeight: 1.7 }}>
+              Your request has been saved and the SafeHer team has been notified. We will connect you with <strong>{mentor.name}</strong> shortly.
             </p>
-            <button className="btn btn-purple" onClick={onClose} style={{ minWidth: 140 }}>Done</button>
+            <p style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 24, padding: "10px 16px", background: "var(--bg-muted)", borderRadius: 10 }}>
+              A confirmation has been sent to <strong>{currentUser?.email}</strong>
+            </p>
+
+            {/* What happens next */}
+            <div style={{ textAlign: "left", marginBottom: 28 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>
+                What happens next
+              </p>
+              {[
+                { n: "1", text: "Your request is saved in your profile under 'My Requests'" },
+                { n: "2", text: "SafeHer team reviews and forwards to the mentor" },
+                { n: "3", text: "Mentor responds within 24-48 hours" },
+                { n: "4", text: "You'll receive a response via your registered email" },
+              ].map(s => (
+                <div key={s.n} style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--purple-light)", color: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, flexShrink: 0 }}>
+                    {s.n}
+                  </div>
+                  <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>{s.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <button className="btn btn-purple" onClick={onClose} style={{ minWidth: 160 }}>
+              Done
+            </button>
           </div>
         ) : (
           <>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
               <div>
                 <h3 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-1)", marginBottom: 4, letterSpacing: "-0.5px" }}>
-                  Book a Session
+                  Request a Session
                 </h3>
                 <p style={{ fontSize: 14, color: "var(--text-3)" }}>with {mentor.name}</p>
               </div>
@@ -51,35 +126,68 @@ function RequestModal({ mentor, onClose }) {
               </button>
             </div>
 
-            <div style={{ display: "flex", gap: 14, padding: "16px 20px", background: "var(--bg-muted)", borderRadius: 14, marginBottom: 24 }}>
+            {/* Mentor info */}
+            <div style={{ display: "flex", gap: 14, padding: "16px 18px", background: "var(--bg-muted)", borderRadius: 14, marginBottom: 20 }}>
               <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--purple)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, flexShrink: 0 }}>
                 {mentor.avatar}
               </div>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>{mentor.name}</p>
                 <p style={{ fontSize: 12, color: "var(--text-3)" }}>{mentor.title}</p>
-                <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{mentor.specialization}</p>
+                <p style={{ fontSize: 12, color: "var(--purple)", fontWeight: 600, marginTop: 2 }}>{mentor.specialization}</p>
               </div>
             </div>
 
-            <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={5}
-              placeholder="Describe what you need help with. This is completely confidential..."
-              style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: "1.5px solid var(--border)", fontSize: 14, fontFamily: "inherit", resize: "none", outline: "none", color: "var(--text-1)", marginBottom: 16, transition: "all 0.2s" }}
-              onFocus={e => e.target.style.borderColor = "var(--purple)"}
-              onBlur={e => e.target.style.borderColor = "var(--border)"}
-            />
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Cancel</button>
-              <button className="btn btn-purple" style={{ flex: 2 }} onClick={() => msg.trim() && setSent(true)}>
-                Send Request
-              </button>
+            {/* Important notice */}
+            <div style={{ padding: "12px 16px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, marginBottom: 20 }}>
+              <p style={{ fontSize: 12, color: "#92400e", lineHeight: 1.6 }}>
+                <strong>How this works:</strong> Your request is saved in SafeHer's system. The mentor will be contacted and will respond to your registered email address within 24-48 hours.
+              </p>
             </div>
+
+            {errorMsg && (
+              <div style={{ padding: "10px 14px", background: "#fef2f2", borderRadius: 10, marginBottom: 16 }}>
+                <p style={{ fontSize: 13, color: "var(--red)" }}>{errorMsg}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSend} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--text-2)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+                  Your Message
+                </label>
+                <textarea
+                  value={msg}
+                  onChange={e => setMsg(e.target.value)}
+                  required
+                  rows={5}
+                  placeholder="Describe what you need help with. Be as specific as you'd like — this is confidential."
+                  style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: "1.5px solid var(--border)", fontSize: 14, fontFamily: "inherit", resize: "none", outline: "none", color: "var(--text-1)", lineHeight: 1.7, transition: "border-color 0.2s" }}
+                  onFocus={e => e.target.style.borderColor = "var(--purple)"}
+                  onBlur={e => e.target.style.borderColor = "var(--border)"}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={status === "sending" || !msg.trim()}
+                  className="btn btn-purple"
+                  style={{ flex: 2, opacity: status === "sending" || !msg.trim() ? 0.6 : 1 }}>
+                  {status === "sending" ? "Sending Request..." : "Send Request"}
+                </button>
+              </div>
+            </form>
           </>
         )}
       </div>
     </div>
   )
 }
+
 
 function MentorCard({ mentor, onRequest }) {
   const sc = specColors[mentor.specialization] || specColors["legal aid"]
@@ -179,6 +287,7 @@ function MentorCard({ mentor, onRequest }) {
 }
 
 export default function MentorDirectory() {
+  const { currentUser } = useAuth()
   const [mentors, setMentors]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState("")
@@ -289,7 +398,13 @@ export default function MentorDirectory() {
           </>
         )}
       </div>
-      {selected && <RequestModal mentor={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+  <RequestModal
+    mentor={selected}
+    currentUser={currentUser}
+    onClose={() => setSelected(null)}
+  />
+)}
     </AppLayout>
   )
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react"
 import AppLayout from "@/components/layout/AppLayout"
 import { useAuth } from "@/context/AuthContext"
-import { profileAPI, emergencyAPI } from "@/lib/api"
-import { User, MapPin, Shield, CheckCircle, Edit2, Save, X, Plus, Trash2, Lock } from "lucide-react"
+import { profileAPI, emergencyAPI, mentorRequestAPI } from "@/lib/api"
+import { User, MapPin, Shield, CheckCircle, Edit2, Save, X, Plus, Trash2, Lock, Clock, MessageSquare, AlertCircle
+} from "lucide-react"
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 
@@ -11,6 +12,100 @@ const relationships = ["mother","father","sister","brother","friend","partner","
 
 const iStyle = { width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, fontFamily: "inherit", outline: "none", color: "var(--text-1)", background: "var(--white)", transition: "border-color 0.2s" }
 const lStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "var(--text-2)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }
+
+function MyRequests({ userId }) {
+  const [requests, setRequests] = useState([])
+  const [loading, setLoading]   = useState(true)
+
+  useEffect(() => {
+    if (!userId) return
+    mentorRequestAPI.getUserRequests(userId)
+      .then(r => setRequests(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [userId])
+
+  const statusConfig = {
+    pending:   { label: "Pending",   color: "#92400e", bg: "#fffbeb", icon: Clock },
+    read:      { label: "Read",      color: "#1e40af", bg: "#eff6ff", icon: CheckCircle },
+    responded: { label: "Responded", color: "#15803d", bg: "#f0fdf4", icon: MessageSquare },
+    declined:  { label: "Declined",  color: "#991b1b", bg: "#fef2f2", icon: AlertCircle },
+  }
+
+  if (loading) return null
+
+  return (
+    <div style={{ background: "var(--white)", border: "1.5px solid var(--border)", borderRadius: 20, padding: "28px", marginTop: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--purple-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <MessageSquare size={18} color="var(--purple)" />
+        </div>
+        <div>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: "var(--text-1)", letterSpacing: "-0.3px" }}>My Mentor Requests</h2>
+          <p style={{ fontSize: 12, color: "var(--text-3)" }}>{requests.length} request{requests.length !== 1 ? "s" : ""} sent</p>
+        </div>
+      </div>
+
+      {requests.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "32px 0" }}>
+          <MessageSquare size={32} color="var(--text-3)" style={{ margin: "0 auto 12px" }} />
+          <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)", marginBottom: 4 }}>No requests yet</p>
+          <p style={{ fontSize: 13, color: "var(--text-3)" }}>When you request a mentor session, it will appear here</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {requests.map(r => {
+            const sc = statusConfig[r.status] || statusConfig.pending
+            const Icon = sc.icon
+            return (
+              <div key={r._id} style={{ padding: "18px 20px", borderRadius: 14, border: "1.5px solid var(--border)", background: "var(--white)" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)", marginBottom: 2 }}>
+                      {r.mentorName}
+                    </p>
+                    <p style={{ fontSize: 12, color: "var(--text-3)" }}>
+                      {r.specialization} · {new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    </p>
+                  </div>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 100, fontSize: 11, fontWeight: 700, background: sc.bg, color: sc.color, flexShrink: 0 }}>
+                    <Icon size={10} /> {sc.label}
+                  </span>
+                </div>
+
+                <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, padding: "10px 14px", background: "var(--bg-muted)", borderRadius: 8, marginBottom: r.response ? 10 : 0 }}>
+                  {r.message}
+                </p>
+
+                {/* Mentor response */}
+                {r.response && (
+                  <div style={{ padding: "12px 16px", background: "var(--green-light)", border: "1px solid #a7f3d0", borderRadius: 10, marginTop: 10 }}>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: "#065f46", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                      Response from {r.mentorName}
+                    </p>
+                    <p style={{ fontSize: 13, color: "#047857", lineHeight: 1.6 }}>{r.response}</p>
+                    {r.respondedAt && (
+                      <p style={{ fontSize: 11, color: "#6ee7b7", marginTop: 6 }}>
+                        Responded {new Date(r.respondedAt).toLocaleDateString("en-IN")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Pending message */}
+                {r.status === "pending" && (
+                  <p style={{ fontSize: 12, color: "#92400e", marginTop: 8 }}>
+                    Response expected within 24-48 hours at {r.userEmail}
+                  </p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function Profile() {
   const { currentUser } = useAuth()
@@ -313,7 +408,8 @@ export default function Profile() {
             </form>
           </div>
         )}
-
+{/* My Mentor Requests */}
+<MyRequests userId={currentUser?.uid} />
       </div>
     </AppLayout>
   )

@@ -127,3 +127,9 @@ export const profileAPI = {
   get:    (uid)  => apiFetch(`/profile/${uid}`),
   upsert: (data) => apiFetch("/profile", { method: "POST", body: JSON.stringify(data) }),
 }
+// ── Mentor Requests API ──
+export const mentorRequestAPI = {
+  create:          (data) => apiFetch("/mentor-requests", { method: "POST", body: JSON.stringify(data) }),
+  getUserRequests: (userId) => apiFetch(`/mentor-requests/user/${userId}`),
+  updateStatus:    (id, data) => apiFetch(`/mentor-requests/${id}/status`, { method: "PATCH", body: JSON.stringify(data) }),
+}
