@@ -335,7 +335,13 @@ export default function Home() {
             © 2024 SafeHer
           </p>
         </div>
+        <div style={{ textAlign: "center", paddingBottom: 16 }}>
+  <a href="/become-mentor" style={{ fontSize: 13, color: "var(--purple)", fontWeight: 600, textDecoration: "none" }}>
+    Are you a professional? Become a SafeHer Mentor
+  </a>
+</div>
       </footer>
+
     </div>
   )
 }

@@ -19,6 +19,7 @@ import PoliceDirectory from "@/pages/PoliceDirectory"
 import ResourceHub from "@/pages/ResourceHub"
 import Profile from "@/pages/Profile"
 import NotFound from "@/pages/NotFound"
+import BecomeMentor from "@/pages/BecomeMentor"
 
 const P = ({ children }) => <ProtectedRoute>{children}</ProtectedRoute>
 
@@ -43,6 +44,7 @@ export default function App() {
       <Route path="/resources"   element={<P><ResourceHub /></P>} />
       <Route path="/profile"     element={<P><Profile /></P>} />
       <Route path="*"            element={<NotFound />} />
+      <Route path="/become-mentor" element={<BecomeMentor />} />
     </Routes>
   )
 }

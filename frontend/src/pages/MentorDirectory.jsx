@@ -325,6 +325,29 @@ export default function MentorDirectory() {
             Connect with verified professionals offering guidance in legal aid, mental health, career development and more.
           </p>
         </div>
+        <div style={{ marginBottom: 40 }}>
+  <p style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+    Expert Network
+  </p>
+  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+    <div>
+      <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-1.5px", color: "var(--text-1)", marginBottom: 10 }}>
+        Trusted Mentors
+      </h1>
+      <p style={{ fontSize: 16, color: "var(--text-3)", maxWidth: 520 }}>
+        Connect with verified professionals offering guidance in legal aid, mental health, career development and more.
+      </p>
+    </div>
+    {/* Become a mentor CTA */}
+    <button
+      onClick={() => navigate("/become-mentor")}
+      style={{ padding: "12px 20px", borderRadius: 12, background: "var(--black)", color: "white", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, transition: "all 0.15s", whiteSpace: "nowrap" }}
+      onMouseEnter={e => e.currentTarget.style.background = "#333"}
+      onMouseLeave={e => e.currentTarget.style.background = "var(--black)"}>
+      <Users size={15} /> Become a Mentor
+    </button>
+  </div>
+</div>
 
         {/* Stats bar */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "var(--border)", borderRadius: 16, overflow: "hidden", marginBottom: 36, border: "1.5px solid var(--border)" }}>

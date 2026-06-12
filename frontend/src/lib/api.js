@@ -133,3 +133,13 @@ export const mentorRequestAPI = {
   getUserRequests: (userId) => apiFetch(`/mentor-requests/user/${userId}`),
   updateStatus:    (id, data) => apiFetch(`/mentor-requests/${id}/status`, { method: "PATCH", body: JSON.stringify(data) }),
 }
+// ── Mentor Applications API ──
+export const mentorApplicationAPI = {
+  apply:        (data)  => apiFetch("/mentor-applications", { method: "POST", body: JSON.stringify(data) }),
+  checkStatus:  (email) => apiFetch(`/mentor-applications/check/${email}`),
+  getAll:       (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return apiFetch(`/mentor-applications${query ? `?${query}` : ""}`)
+  },
+  review:       (id, data) => apiFetch(`/mentor-applications/${id}/review`, { method: "PATCH", body: JSON.stringify(data) }),
+}

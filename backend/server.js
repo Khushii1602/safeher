@@ -16,6 +16,8 @@ import childSafetyRoutes from "./routes/childSafetyRoutes.js"
 import policeRoutes from "./routes/policeRoutes.js"
 import userProfileRoutes from "./routes/userProfileRoutes.js"
 import mentorRequestRoutes from "./routes/mentorRequestRoutes.js"
+import mentorApplicationRoutes from "./routes/mentorApplicationRoutes.js"
+import mentorRequestRoutes from "./routes/mentorRequestRoutes.js"
 
 connectDB()
 const app = express()
@@ -39,7 +41,8 @@ app.use("/api/child-safety", childSafetyRoutes)
 app.use("/api/police", policeRoutes)
 app.use("/api/profile", userProfileRoutes)
 app.use("/api/mentor-requests", mentorRequestRoutes)
-
+app.use("/api/mentor-applications", mentorApplicationRoutes)
+app.use("/api/mentor-requests", mentorRequestRoutes)
 
 app.get("/api/health", (req, res) => {
   res.json({
