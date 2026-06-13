@@ -1,6 +1,6 @@
 import { useState } from "react"
 import Sidebar from "./Sidebar"
-import { Menu, X } from "lucide-react"
+import { Menu, X, Shield } from "lucide-react"
 
 export default function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -45,7 +45,7 @@ export default function AppLayout({ children }) {
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 26, height: 26, borderRadius: 7, background: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 13, color: "white" }}>🛡️</span>
+              <Shield size={14} color="white" />
             </div>
             <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.5px", color: "var(--text-1)" }}>
               Safe<span style={{ color: "var(--purple)" }}>Her</span>
