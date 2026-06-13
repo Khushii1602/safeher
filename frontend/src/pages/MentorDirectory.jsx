@@ -5,8 +5,9 @@ import emailjs from "@emailjs/browser"
 import { useAuth } from "@/context/AuthContext"
 import {
   Search, MapPin, CheckCircle, Star,
-  X, Clock, MessageSquare, Award, Globe
+  X, Clock, MessageSquare, Award, Globe, Users
 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 const specializations = ["all","legal aid","mental health","career guidance","financial independence","domestic violence support","digital safety","entrepreneurship","education"]
 
@@ -294,7 +295,7 @@ export default function MentorDirectory() {
   const [search, setSearch]     = useState("")
   const [spec, setSpec]         = useState("all")
   const [selected, setSelected] = useState(null)
-
+  const navigate = useNavigate()  
   useEffect(() => { fetchMentors() }, [spec])
 
   async function fetchMentors(s = search) {
